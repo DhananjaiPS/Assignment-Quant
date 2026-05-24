@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Queue } from "bullmq";
+import { videoExtractionQueue } from "@/lib/queue";
 import crypto from "crypto";
 
-const videoQueue = new Queue("video-extraction-queue", {
-  connection: {
-    host: process.env.REDIS_HOST || "127.0.0.1",
-    port: Number(process.env.REDIS_PORT || 6379),
-  },
-});
 
 export async function POST(request: Request) {
   try {
@@ -76,7 +70,7 @@ export async function POST(request: Request) {
     });
 
     // 4. Worker ko File ka naam nahi, Cloudinary URL bheja!
-    await videoQueue.add("extract-video", {
+    await videoExtractionQueue.add("extract-video", {
       jobId: job.id,
       productId: product.id,
       videoUrl: finalCloudUrl,

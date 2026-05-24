@@ -7,11 +7,13 @@ const isProtectedRoute = createRouteMatcher([
   '/jobs(.*)',
   '/products(.*)',
   '/alerts(.*)',
+  '/api-docs(.*)',
   '/api/jobs(.*)',
   '/api/products(.*)',
   '/api/alerts(.*)',
   '/api/analyze(.*)',
-  '/api/upload(.*)'
+  '/api/upload(.*)',
+  '/api/reports(.*)'
 ])
 
 // Routes that are strictly public

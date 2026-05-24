@@ -1,0 +1,380 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Quantacus Product Intelligence API",
+    "description": "API endpoints for the Quantacus Product Ingestion, Listing Quality Auditing, Competitor Price Tracking, and AI Title Optimization pipelines.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Base API Route"
+    }
+  ],
+  "paths": {
+    "/upload-video": {
+      "post": {
+        "summary": "Ingest video for product attribute extraction",
+        "description": "Uploads and registers a video listing workflow, placing it in the extraction queue.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cloudUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "The URL of the video (Cloudinary, S3, etc.)"
+                  },
+                  "filename": {
+                    "type": "string",
+                    "description": "Original file name of the video"
+                  },
+                  "fileSize": {
+                    "type": "number",
+                    "description": "Video file size in bytes"
+                  },
+                  "isPreset": {
+                    "type": "boolean",
+                    "description": "If true, loads a preset video demo"
+                  },
+                  "presetName": {
+                    "type": "string",
+                    "description": "Name of the preset"
+                  }
+                },
+                "required": ["cloudUrl"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ingestion job registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "jobId": { "type": "string" },
+                    "alreadyExisted": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input values"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/dashboard/quality-summary": {
+      "get": {
+        "summary": "Retrieve catalog quality summary metrics",
+        "description": "Calculates aggregation of all SKU quality scores, counts of unresolved audit issues, and total active pricing alerts.",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved dashboard stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalProducts": { "type": "integer" },
+                        "averageQualityScore": { "type": "number" },
+                        "issueCounts": {
+                          "type": "object",
+                          "properties": {
+                            "HIGH": { "type": "integer" },
+                            "MEDIUM": { "type": "integer" },
+                            "LOW": { "type": "integer" }
+                          }
+                        },
+                        "activeAlerts": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch metrics"
+          }
+        }
+      }
+    },
+    "/products/{skuId}/issues": {
+      "get": {
+        "summary": "List audit validation issues for a product",
+        "description": "Retrieves all warnings, defects, or gaps detected by the catalog auditor for the given SKU.",
+        "parameters": [
+          {
+            "name": "skuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The SKU identifier of the product"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of issues retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "productId": { "type": "string" },
+                          "issueType": { "type": "string" },
+                          "severity": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH"] },
+                          "title": { "type": "string" },
+                          "description": { "type": "string" },
+                          "suggestedFix": { "type": "string" },
+                          "isResolved": { "type": "boolean" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/products/{skuId}/enhance-title": {
+      "post": {
+        "summary": "Propose an AI-optimized title for the SKU",
+        "description": "Leverages Gemini generative AI to draft an optimized SEO-friendly title based on the brand, category, description, and specs.",
+        "parameters": [
+          {
+            "name": "skuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The SKU identifier of the product"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Title proposal generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "suggestedTitle": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "500": {
+            "description": "AI enhancer failure"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Apply or Revert an AI title proposal",
+        "description": "Saves the proposed enhanced title to the product specification, or rolls it back to the original title.",
+        "parameters": [
+          {
+            "name": "skuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The SKU identifier of the product"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enhancementId": {
+                    "type": "string",
+                    "description": "The identifier of the TitleEnhancement record"
+                  },
+                  "apply": {
+                    "type": "boolean",
+                    "description": "True to overwrite Flipkart title, False to revert to original"
+                  }
+                },
+                "required": ["enhancementId", "apply"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Title enhancement applied or reverted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product or enhancement record not found"
+          },
+          "500": {
+            "description": "Database operation failure"
+          }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "summary": "List active system alerts",
+        "description": "Retrieves unread and active price-gaps or critical quality alerts.",
+        "responses": {
+          "200": {
+            "description": "Alert list successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "alerts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "alertType": { "type": "string" },
+                          "severity": { "type": "string" },
+                          "title": { "type": "string" },
+                          "message": { "type": "string" },
+                          "isRead": { "type": "boolean" },
+                          "createdAt": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update read/dismiss status of an alert",
+        "description": "Marks an alert as read or dismisses it entirely to remove it from the active inbox.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "alertId": {
+                    "type": "string",
+                    "description": "Identifier of the alert to update"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": ["read", "dismiss"],
+                    "description": "Action to apply"
+                  }
+                },
+                "required": ["alertId", "action"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Alert successfully updated"
+          },
+          "400": {
+            "description": "Missing parameters or invalid actions"
+          }
+        }
+      }
+    },
+    "/jobs/{jobId}/retry": {
+      "post": {
+        "summary": "Retry a failed extraction operation job",
+        "description": "Resets job status to PENDING, deletes failed logs, and re-adds the video to the processing queue.",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The background job identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job successfully queued for retry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found"
+          },
+          "400": {
+            "description": "Job is not video extraction type or has missing data"
+          }
+        }
+      }
+    }
+  }
+}

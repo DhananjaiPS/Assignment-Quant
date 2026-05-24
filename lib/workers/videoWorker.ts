@@ -14,10 +14,20 @@ import {
     ExtractionStatus,
 } from "@prisma/client";
 
-const connection = {
+import "./scheduler";
+
+const connection: any = {
     host: process.env.REDIS_HOST || "127.0.0.1",
     port: Number(process.env.REDIS_PORT || 6379),
 };
+
+if (process.env.REDIS_PASSWORD) {
+    connection.password = process.env.REDIS_PASSWORD;
+}
+
+if (process.env.REDIS_TLS === "true" || process.env.REDIS_HOST?.includes("upstash.io")) {
+    connection.tls = {};
+}
 
 const MODELS = [
     "gemini-2.5-flash",

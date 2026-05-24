@@ -188,6 +188,16 @@ model TitleEnhancement {
 // ALERT SYSTEM
 // ======================================================
 
+model AlertRule {
+  id               String    @id @default(cuid())
+  name             String
+  alertType        AlertType
+  threshold        Float?    // e.g., 10 for 10% price gap
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
 model Alert {
   id               String        @id @default(cuid())
 

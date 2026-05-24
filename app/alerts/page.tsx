@@ -19,7 +19,10 @@ import {
   Sparkles,
   CheckCircle,
   XCircle,
+  SlidersHorizontal,
+  Edit2
 } from 'lucide-react';
+import AlertRulesModal from '@/components/AlertRulesModal';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -29,6 +32,12 @@ export default function AlertsHubPage() {
 
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  // Rules State
+  const { data: rulesData, mutate: mutateRules } = useSWR('/api/alerts/rules', fetcher);
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<any>(null);
+  const rules = rulesData?.success ? rulesData.rules : [];
 
   // Email Notification States
   const [inputEmail, setInputEmail] = useState('');
@@ -317,6 +326,69 @@ export default function AlertsHubPage() {
         )}
       </div>
 
+      {/* Alert Rules Card */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+              <SlidersHorizontal className="w-5 h-5 text-indigo-600" />
+              Dynamic Alert Rules
+            </h2>
+            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+              Configure customizable thresholds and constraints for the validation and repricing engine.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setEditingRule(null);
+              setIsRulesModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs tracking-wide uppercase py-2 px-4 rounded-xl transition-all border border-indigo-200 cursor-pointer shadow-sm"
+          >
+            <Settings className="w-4 h-4" />
+            Configure Rules
+          </button>
+        </div>
+
+        {rules.length === 0 ? (
+          <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl text-center">
+            <p className="text-sm font-semibold text-slate-500">No custom alert rules configured yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {rules.map((rule: any) => (
+              <div key={rule.id} className={`p-4 rounded-xl border flex justify-between items-center transition-all ${rule.isActive ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-70'}`}>
+                <div className="space-y-1">
+                  <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                    {rule.name}
+                    {!rule.isActive && <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full uppercase">Inactive</span>}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-semibold">
+                    Type: <span className="text-slate-700">{rule.alertType}</span> 
+                    {rule.threshold !== null && <span className="ml-2">| Threshold: <span className="text-indigo-600 font-bold">{rule.threshold}</span></span>}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingRule(rule);
+                    setIsRulesModalOpen(true);
+                  }}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-indigo-600 cursor-pointer"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <AlertRulesModal
+        isOpen={isRulesModalOpen}
+        onClose={() => setIsRulesModalOpen(false)}
+        editingRule={editingRule}
+        onSave={() => mutateRules()}
+      />
 
       {isLoading ? (
         <div className="text-center py-24 text-slate-500 text-sm">Synchronizing alerts feed...</div>

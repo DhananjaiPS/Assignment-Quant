@@ -3,12 +3,16 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { Activity, CheckCircle2, ShieldAlert, Clock, Terminal, ChevronRight, RefreshCw } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
+
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function JobsPage() {
   const { data, error, mutate, isLoading } = useSWR('/api/jobs', fetcher, { refreshInterval: 5000 });
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [retryingJobId, setRetryingJobId] = useState<string | null>(null);
+
 
   // Poll selected job details (if one is selected and is running)
   const { data: selectedData } = useSWR(
@@ -45,7 +49,9 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-8 animate-fade-in-up">
+      <Toaster position="top-right" />
       {/* Header */}
+
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-2">
@@ -132,6 +138,34 @@ export default function JobsPage() {
                   </div>
 
                   <div className="flex items-center gap-4">
+                    {selectedJob.status === 'FAILED' && (
+                      <button
+                        onClick={async () => {
+                          if (retryingJobId) return;
+                          setRetryingJobId(selectedJob.id);
+                          const toastId = toast.loading('Initiating job retry...');
+                          try {
+                            const res = await fetch(`/api/jobs/${selectedJob.id}/retry`, {
+                              method: 'POST',
+                            });
+                            const resData = await res.json();
+                            if (!resData.success) throw new Error(resData.error || 'Failed to retry job.');
+                            
+                            toast.success('Job successfully queued for retry!', { id: toastId });
+                            mutate();
+                          } catch (err: any) {
+                            toast.error(err.message || 'Failed to retry job.', { id: toastId });
+                          } finally {
+                            setRetryingJobId(null);
+                          }
+                        }}
+                        disabled={retryingJobId !== null}
+                        className="px-3 py-1.5 bg-red-650 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer disabled:opacity-70"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${retryingJobId === selectedJob.id ? 'animate-spin' : ''}`} />
+                        Retry Job
+                      </button>
+                    )}
                     <div>
                       <div className="text-[10px] text-slate-450 uppercase tracking-wider text-right font-bold">Job Progress</div>
                       <div className="font-extrabold text-slate-800 text-sm text-right mt-0.5">{selectedJob.progress}%</div>
@@ -140,6 +174,7 @@ export default function JobsPage() {
                       {selectedJob.status}
                     </span>
                   </div>
+
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-150 text-xs">

@@ -4,6 +4,8 @@ import { LayoutDashboard, ShoppingBag, ShieldAlert, BadgeAlert, Sparkles, Trendi
 import { BellRing } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MotionWrapper from '@/components/MotionWrapper';
+import DownloadCSVButton from '@/components/DownloadCSVButton';
+
 export const revalidate = 0; // Disable server-side caching so data is fresh on each load
 
 export default async function DashboardPage() {
@@ -186,6 +188,10 @@ export default async function DashboardPage() {
               </MotionWrapper>
 
               <MotionWrapper>
+                <DownloadCSVButton />
+              </MotionWrapper>
+
+              <MotionWrapper>
                 <Link
                   href="/alerts"
                   className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-sm bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all whitespace-nowrap"
@@ -193,6 +199,7 @@ export default async function DashboardPage() {
                   View Alerts
                 </Link>
               </MotionWrapper>
+
 
             </div>
           </div>
