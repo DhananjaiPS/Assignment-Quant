@@ -13,7 +13,7 @@ export default function WebhooksConsolePage() {
       method: 'POST /services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX',
       description: 'Triggered when our Flipkart listing price is > 10% higher than the lowest competitor platform.',
       json: `{
-  "username": "Quantaculas Price Alert Bot",
+  "username": "Quantacus Price Alert Bot",
   "icon_emoji": ":money_with_wings:",
   "attachments": [
     {
@@ -22,7 +22,7 @@ export default function WebhooksConsolePage() {
       "pretext": "⚠️ *Critical Competitor Pricing Gap Exceeded*",
       "author_name": "Flipkart Pricing Monitor Engine",
       "title": "Nike Zoom Pegasus Running Shoes (SKU: SHOE001)",
-      "title_link": "https://quantaculas-intelligence.vercel.app/products/SHOE001",
+      "title_link": "https://quantacus-intelligence.vercel.app/products/SHOE001",
       "text": "Our selling price is highly uncompetitive compared to major e-commerce nodes.",
       "fields": [
         {
@@ -46,7 +46,7 @@ export default function WebhooksConsolePage() {
           "short": false
         }
       ],
-      "footer": "Quantaculas Alerts Engine v1.0",
+      "footer": "Quantacus Alerts Engine v1.0",
       "ts": 1779600000
     }
   ]
@@ -60,7 +60,7 @@ export default function WebhooksConsolePage() {
       json: `{
   "chat_id": "-100123456789",
   "parse_mode": "HTML",
-  "text": "🔴 <b>CRITICAL LISTING AUDIT REJECTION</b>\\n\\n<b>Product:</b> Puma Bag (SKU: <code>BAG001</code>)\\n<b>Audit Quality Score:</b> 10% (CRITICAL FAIL)\\n\\nOur validation engine has registered <b>3 severe listing audit failures</b>:\\n\\n1. ❌ <b>Missing Image URL</b> (HIGH severity)\\n   <i>Suggested Fix:</i> Add at least one product visual or accessible thumbnail link.\\n\\n2. ❌ <b>MRP Violation Conflict</b> (HIGH severity)\\n   <i>Suggested Fix:</i> Max Retail Price (INR 1299.00) is lower than Flipkart Selling Price (INR 1799.00). Update MRP or reduce price.\\n\\n3. ⚠️ <b>Weak Listing Description</b> (LOW severity)\\n   <i>Suggested Fix:</i> Description is only 8 characters. Expand past 50 characters to highlight features.\\n\\n👉 <a href=\\"https://quantaculas-intelligence.vercel.app/products/BAG001\\">Open Listing Audit Panel to Resolve Specifications</a>"
+  "text": "🔴 <b>CRITICAL LISTING AUDIT REJECTION</b>\\n\\n<b>Product:</b> Puma Bag (SKU: <code>BAG001</code>)\\n<b>Audit Quality Score:</b> 10% (CRITICAL FAIL)\\n\\nOur validation engine has registered <b>3 severe listing audit failures</b>:\\n\\n1. ❌ <b>Missing Image URL</b> (HIGH severity)\\n   <i>Suggested Fix:</i> Add at least one product visual or accessible thumbnail link.\\n\\n2. ❌ <b>MRP Violation Conflict</b> (HIGH severity)\\n   <i>Suggested Fix:</i> Max Retail Price (INR 1299.00) is lower than Flipkart Selling Price (INR 1799.00). Update MRP or reduce price.\\n\\n3. ⚠️ <b>Weak Listing Description</b> (LOW severity)\\n   <i>Suggested Fix:</i> Description is only 8 characters. Expand past 50 characters to highlight features.\\n\\n👉 <a href=\\"https://quantacus-intelligence.vercel.app/products/BAG001\\">Open Listing Audit Panel to Resolve Specifications</a>"
 }`
     },
     {

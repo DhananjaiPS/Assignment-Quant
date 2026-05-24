@@ -1,14 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Queue } from "bullmq";
-import { v2 as cloudinary } from "cloudinary";
-
-// Cloudinary Configure kiya
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import crypto from "crypto";
 
 const videoQueue = new Queue("video-extraction-queue", {
   connection: {
@@ -17,41 +10,27 @@ const videoQueue = new Queue("video-extraction-queue", {
   },
 });
 
-import crypto from "crypto";
-
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const isPreset = formData.get("isPreset") === "true";
-    const presetName = formData.get("presetName") as string | null;
+    const body = await request.json();
+    const { isPreset, presetName, cloudUrl, filename, fileSize } = body;
 
-    let cloudVideoUrl = "";
-    let originalFileName = "";
-    let buffer: Buffer | null = null;
-    let fileSize = 0;
-    let fileHash: string | null = null;
-
+    let finalCloudUrl = cloudUrl;
+    let originalFileName = filename || "uploaded_video.mp4";
+    
     if (isPreset && presetName) {
       originalFileName = `${presetName}.mp4`;
-      // Use a sample video URL for demo presets
-      cloudVideoUrl = "https://res.cloudinary.com/demo/video/upload/dog.mp4";
-    } else {
-      const file = formData.get("file") as File | null;
-      if (!file) return NextResponse.json({ error: "No file found" }, { status: 400 });
-
-      originalFileName = file.name;
-      fileSize = file.size;
-
-      // File to Buffer conversion
-      const bytes = await file.arrayBuffer();
-      buffer = Buffer.from(bytes);
-      fileHash = crypto.createHash("md5").update(buffer).digest("hex");
+      finalCloudUrl = "https://res.cloudinary.com/demo/video/upload/dog.mp4";
     }
 
-    // Determine unique fingerprinted key
+    if (!finalCloudUrl) {
+       return NextResponse.json({ error: "Missing video URL" }, { status: 400 });
+    }
+
+    // Determine unique fingerprinted key based on URL instead of hash
     const uniqueKey = presetName 
       ? `preset_${presetName}` 
-      : `${fileHash}_${fileSize}`;
+      : crypto.createHash("md5").update(finalCloudUrl).digest("hex");
 
     // Hard Stop Duplicate uploads: check if this job already exists in DB
     const existingJob = await prisma.processingJob.findUnique({
@@ -70,21 +49,6 @@ export async function POST(request: Request) {
       });
     }
 
-    // Upload to Cloudinary only if it's a new upload (not preset, not duplicate)
-    if (!isPreset && buffer) {
-      const uploadResult: any = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { resource_type: "video", folder: "quantaculas" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        uploadStream.end(buffer);
-      });
-      cloudVideoUrl = uploadResult.secure_url;
-    }
-
     // 3. Database Entry
     const job = await prisma.processingJob.create({
       data: {
@@ -94,9 +58,8 @@ export async function POST(request: Request) {
         uniqueKey,
         metadata: { 
           originalFileName, 
-          cloudUrl: cloudVideoUrl,
-          fileHash,
-          fileSize,
+          cloudUrl: finalCloudUrl,
+          fileSize: fileSize || 0,
           presetName: presetName || null
         },
       },
@@ -116,7 +79,7 @@ export async function POST(request: Request) {
     await videoQueue.add("extract-video", {
       jobId: job.id,
       productId: product.id,
-      videoUrl: cloudVideoUrl,
+      videoUrl: finalCloudUrl,
       fileName: originalFileName,
     });
 

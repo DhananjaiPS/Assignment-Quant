@@ -421,8 +421,35 @@ export default function ReviewDraftPage({
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 h-60 overflow-y-auto font-mono text-[11px] text-slate-700 space-y-2">
 
             {logs.length === 0 ? (
-              <div>
-                Connecting pipeline...
+              <div className="space-y-2 text-sm">
+                <div className={progress >= 0 && progress < 10 ? "text-blue-600 font-bold" : "text-slate-500"}>
+                  {progress > 0 ? '✔' : '•'} Connecting ingestion pipeline...
+                </div>
+                {progress >= 10 && (
+                  <div className={progress >= 10 && progress < 25 ? "text-blue-600 font-bold animate-pulse" : "text-slate-500"}>
+                    {progress >= 25 ? '✔' : '•'} Downloading video from secure cloud storage...
+                  </div>
+                )}
+                {progress >= 25 && (
+                  <div className={progress >= 25 && progress < 45 ? "text-blue-600 font-bold animate-pulse" : "text-slate-500"}>
+                    {progress >= 45 ? '✔' : '•'} Extracting video frames via FFMPEG engine...
+                  </div>
+                )}
+                {progress >= 45 && (
+                  <div className={progress >= 45 && progress < 60 ? "text-blue-600 font-bold animate-pulse" : "text-slate-500"}>
+                    {progress >= 60 ? '✔' : '•'} Scanning frames with Google Cloud Vision & YOLOv8...
+                  </div>
+                )}
+                {progress >= 60 && (
+                  <div className={progress >= 60 && progress < 100 ? "text-blue-600 font-bold animate-pulse" : "text-slate-500"}>
+                    {progress >= 100 ? '✔' : '•'} Running Multi-Modal AI inference engine...
+                  </div>
+                )}
+                {progress >= 100 && (
+                  <div className="text-emerald-600 font-bold">
+                    ✔ Extraction Completed Successfully. Generating Schema...
+                  </div>
+                )}
               </div>
             ) : (
               [...logs]

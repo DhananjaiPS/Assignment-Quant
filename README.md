@@ -1,4 +1,4 @@
-# Product Intelligence Dashboard (Quantaculas PRO)
+# Product Intelligence Dashboard (Quantacus PRO)
 
 An end-to-end, production-grade Product Intelligence Dashboard built for e-commerce sellers on Flipkart. It automatically ingests and parses product attributes from video frames or fallback CSV feeds, audits listing quality against Flipkart indexing standards (calculating a 0-100 Quality Score), suggests AI-enhanced SEO titles, visualizes competitor pricing movements across major platform nodes, and delivers real-time notifications for critical alert signals.
 
@@ -8,7 +8,7 @@ An end-to-end, production-grade Product Intelligence Dashboard built for e-comme
 
 Flipkart sellers frequently battle dirty catalog data, weak title copy, out-of-stock search ranking penalties, and aggressive competitor repricing across platforms like Amazon, Myntra, and Ajio. Today, sellers coordinate three separate tools (media storage, repricers, and catalog checklists) to manage a single SKU. 
 
-**Quantaculas PRO** bridges this operational gap by compiling media, repricing logs, audits, and Slack/Telegram webhook notifications into a singular, dynamic console.
+**Quantacus PRO** bridges this operational gap by compiling media, repricing logs, audits, and Slack/Telegram webhook notifications into a singular, dynamic console.
 
 ---
 
@@ -158,7 +158,7 @@ Follow these steps to deploy and run the app locally:
 
 1.  **Clone the Repository** and navigate to the directory:
     ```bash
-    cd Quantaculas
+    cd Quantacus
     ```
 2.  **Install Node.js Dependencies**:
     ```bash
@@ -189,7 +189,7 @@ Create a `.env` file in your root workspace:
 
 ```env
 # Relational Database Connection (Default local pgsql credentials)
-DATABASE_URL="postgresql://postgres@localhost:5432/quantaculas_db?schema=public"
+DATABASE_URL="postgresql://postgres@localhost:5432/quantacus_db?schema=public"
 
 # Next.js Environment
 NODE_ENV="development"
@@ -199,8 +199,8 @@ NODE_ENV="development"
 
 ## 12. Deployment Links
 
-*   **Frontend Client**: [https://quantaculas-intelligence.vercel.app](https://quantaculas-intelligence.vercel.app) *(Simulated Vercel URL placeholder)*
-*   **Backend REST APIs**: [https://quantaculas-intelligence.vercel.app/api/products](https://quantaculas-intelligence.vercel.app/api/products) *(Simulated API URL placeholder)*
+*   **Frontend Client**: [https://quantacus-intelligence.vercel.app](https://quantacus-intelligence.vercel.app) *(Simulated Vercel URL placeholder)*
+*   **Backend REST APIs**: [https://quantacus-intelligence.vercel.app/api/products](https://quantacus-intelligence.vercel.app/api/products) *(Simulated API URL placeholder)*
 
 ---
 

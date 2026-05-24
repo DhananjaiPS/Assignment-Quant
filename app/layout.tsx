@@ -15,9 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quantaculas - Product Intelligence Dashboard",
+  title: "Quantacus - Product Intelligence Dashboard",
   description: "Advanced listing auditor, competitor pricing analyzer, and seller title optimizer for marketplaces.",
 };
+
+import { ClerkProvider } from '@clerk/nextjs'
 
 export default function RootLayout({
   children,
@@ -25,20 +27,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-white text-[#0F172A]">
-        <Navbar />
-        <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 animate-fade-in-up">
-          {children}
-        </main>
+    <ClerkProvider>
+      <html
+        lang="en"
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      >
+        <body className="min-h-full flex flex-col bg-white text-[#0F172A]">
+          <Navbar />
+          <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 animate-fade-in-up">
+            {children}
+          </main>
         <footer className="bg-white border-t border-slate-200 mt-auto">
           <div className="max-w-7xl mx-auto px-6 py-12 md:py-16 grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2 space-y-4">
               <div className="font-extrabold text-lg text-slate-900 tracking-tight flex items-center gap-1.5">
-                Quantaculas <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full border border-blue-100">PRO</span>
+                Quantacus <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full border border-blue-100">PRO</span>
               </div>
               <p className="text-xs text-slate-500 font-semibold leading-relaxed max-w-sm">
                 Advanced listing auditor, outlier-free competitor pricing analyzer, and seller title optimizer engineered for next-generation marketplace merchants.
@@ -63,7 +66,7 @@ export default function RootLayout({
           </div>
           <div className="max-w-7xl mx-auto px-6 py-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] text-slate-400 font-bold">
             <div>
-              © 2026 Quantaculas. Optimized for Flipkart Seller Listing Intelligence.
+              © 2026 Quantacus. Optimized for Flipkart Seller Listing Intelligence.
             </div>
             <div className="flex gap-4">
               <span>Secure Connection Active</span>
@@ -74,5 +77,6 @@ export default function RootLayout({
         </footer>
       </body>
     </html>
+    </ClerkProvider>
   );
 }

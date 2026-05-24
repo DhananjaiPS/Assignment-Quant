@@ -365,3 +365,24 @@ enum AlertType {
   COMPETITOR_PRICE_DROP
   LISTING_VALIDATION_ERROR
 }
+
+// ======================================================
+// USER AUTHENTICATION & ACCESS ROLES
+// ======================================================
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String?  @unique
+  email       String   @unique
+  password    String?  // Optional for Clerk migration fallback
+  role        Role     @default(ADMIN)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+

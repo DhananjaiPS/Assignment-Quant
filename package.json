@@ -1,5 +1,5 @@
 {
-  "name": "quantaculas-app",
+  "name": "quantacus-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,6 +11,7 @@
     "worker:watch": "tsx watch lib/workers/videoWorker.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.4.1",
     "@google-cloud/vision": "^5.3.6",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "5.21.1",

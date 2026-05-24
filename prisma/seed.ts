@@ -16,7 +16,19 @@ async function main() {
   await prisma.product.deleteMany();
   await prisma.processingJob.deleteMany();
 
+  await prisma.user.deleteMany();
+
   console.log('🧹 Cleaned existing tables.');
+
+  // Create default admin user for Clerk matching
+  await prisma.user.create({
+    data: {
+      email: 'dhananjai@gmail.com',
+      password: 'clerk-managed', // placeholder, auth managed by Clerk
+      role: 'ADMIN',
+    }
+  });
+  console.log('👤 Created default ADMIN user: dhananjai@gmail.com');
 
   console.log('✅ Database is clean and ready for live production data ingestion.');
 

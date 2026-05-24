@@ -145,22 +145,53 @@ export default function IngestionPage() {
     setVideoError('');
 
     try {
-      const formData = new FormData();
+      let finalCloudUrl = "";
+      let finalFileName = "";
+      let finalFileSize = 0;
 
       if (presetName) {
-        formData.append('isPreset', 'true');
-        formData.append('presetName', presetName);
+        // Handled below in fetch
       } else if (videoFile) {
-        formData.append('file', videoFile);
+        finalFileName = videoFile.name;
+        finalFileSize = videoFile.size;
+
+        // 1. Get Signature from backend
+        const signRes = await fetch('/api/cloudinary-sign');
+        const signData = await signRes.json();
+
+        // 2. Upload directly to Cloudinary bypassing Next.js limits
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', videoFile);
+        uploadFormData.append('api_key', signData.apiKey);
+        uploadFormData.append('timestamp', signData.timestamp);
+        uploadFormData.append('signature', signData.signature);
+        uploadFormData.append('folder', 'quantacus');
+
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloudName}/video/upload`, {
+          method: 'POST',
+          body: uploadFormData,
+        });
+
+        const uploadData = await uploadRes.json();
+        if (uploadData.error) throw new Error(uploadData.error.message);
+
+        finalCloudUrl = uploadData.secure_url;
       } else {
         throw new Error('Please select a video file or click one of the preset clips.');
       }
 
-      formData.append('enhanceTitle', String(enhanceTitle));
-
+      // 3. Trigger backend processing with Cloudinary URL
       const res = await fetch('/api/upload-video', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isPreset: !!presetName,
+          presetName,
+          cloudUrl: finalCloudUrl,
+          filename: finalFileName,
+          fileSize: finalFileSize,
+          enhanceTitle
+        })
       });
 
       const data = await res.json();

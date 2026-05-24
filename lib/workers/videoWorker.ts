@@ -53,10 +53,69 @@ function safeJSONParse(text: string) {
 }
 
 // ======================================================
+// SMART HEURISTIC FALLBACK PARSER
+// ======================================================
+function heuristicExtract(ocrText: string, yoloObjects: string[]) {
+    const lines = ocrText.split('\n').map(l => l.trim()).filter(Boolean);
+    let title = yoloObjects.length ? `Premium ${yoloObjects[0]}` : "Unknown Product";
+    let brand = "Generic";
+    let size = "";
+    let price = 999;
+    let mrp = 1299;
+    
+    if (lines.length > 0) {
+        // Simple heuristic: Take first line as brand, and first 2-3 lines as title
+        brand = lines[0].split(' ').slice(0, 2).join(' ');
+        title = lines.slice(0, 2).join(' ').substring(0, 100);
+    }
+
+    // Try to find sizes using Regex (e.g., 800 ml, 500g, 1L)
+    const sizeMatch = ocrText.match(/(\d+(?:\.\d+)?\s*(?:ml|l|g|kg|oz|fl\.?\s*oz|pack|pcs))/i);
+    if (sizeMatch) {
+        size = sizeMatch[1];
+    }
+
+    // Try to find prices using Regex (₹100, Rs. 100, 100/-)
+    const priceMatch = ocrText.match(/(?:₹|rs\.?|inr)\s*(\d+(?:,\d+)*(?:\.\d+)?)|(\d+(?:,\d+)*(?:\.\d+)?)\s*\/-/i);
+    if (priceMatch) {
+        const val = priceMatch[1] || priceMatch[2];
+        price = parseFloat(val.replace(/,/g, ''));
+        mrp = Math.floor(price * 1.3); // Fake an MRP 30% higher
+    }
+
+    const description = lines.length > 0 
+        ? `Extracted from video: ${lines.join(' ').substring(0, 250)}...`
+        : (yoloObjects.length ? `Detected objects: ${yoloObjects.join(', ')}` : "No details available.");
+
+    return {
+        productTitle: title,
+        brand: brand,
+        description: description,
+        category: yoloObjects.length ? yoloObjects[0] : "General",
+        price: price,
+        mrp: mrp,
+        size: size,
+        color: "",
+        gender: "Unisex",
+        material: "",
+        confidenceScore: 0.35 // Lower confidence for heuristic extraction
+    };
+}
+
+// ======================================================
 // GEMINI FALLBACK ENGINE
 // ======================================================
-async function generateWithFallback(prompt: string) {
+async function generateWithFallback(prompt: string, validFrames: string[]) {
     let lastError: any = null;
+
+    const imageParts = validFrames.slice(0, 3).map((f) => {
+        return {
+            inlineData: {
+                data: fs.readFileSync(f).toString("base64"),
+                mimeType: "image/jpeg"
+            }
+        };
+    });
 
     for (const modelName of MODELS) {
         try {
@@ -69,14 +128,14 @@ async function generateWithFallback(prompt: string) {
                 },
             });
 
-            const response = await model.generateContent(prompt);
+            const response = await model.generateContent([prompt, ...imageParts]);
             const text = response.response.text();
             console.log(`✅ SUCCESS with ${modelName}`);
 
             return { text, modelUsed: modelName };
         } catch (err: any) {
             lastError = err;
-            console.log(`❌ ${modelName} failed. Trying next...`);
+            console.log(`❌ ${modelName} failed: ${err.message}. Trying next...`);
         }
     }
     throw new Error(`All Gemini models failed. Last Error: ${lastError?.message}`);
@@ -121,10 +180,15 @@ const worker = new Worker(
             // 3. OCR Extraction
             let allOcrText = "";
             for (const frame of validFrames) {
-                const [ocrResult] = await visionClient.textDetection(frame);
-                allOcrText += ocrResult.textAnnotations?.[0]?.description || "\n";
+                try {
+                    const [ocrResult] = await visionClient.textDetection(frame);
+                    allOcrText += ocrResult.textAnnotations?.[0]?.description || "\n";
+                } catch (ocrErr: any) {
+                    console.log(`⚠️ Vision API error on frame ${frame}:`, ocrErr.message);
+                }
             }
             const cleanedOcr = [...new Set(allOcrText.split("\n").map((t) => t.trim()).filter(Boolean))].join("\n");
+            console.log("📝 OCR EXTRACTED:", cleanedOcr || "NONE");
             await prisma.processingJob.update({ where: { id: jobId }, data: { progress: 60 } });
 
             // 4. YOLO Detection
@@ -176,23 +240,16 @@ STRICT INFERENCE RULES:
 
             let aiData: any;
             try {
-                const aiResponse = await generateWithFallback(prompt);
+                const aiResponse = await generateWithFallback(prompt, validFrames);
                 aiData = safeJSONParse(aiResponse.text);
             } catch (err: any) {
-                console.log("Gemini pipeline crashed. Falling back to defaults.");
+                console.log(`Gemini pipeline crashed: ${err.message}. Falling back to defaults.`);
             }
 
-            // Fallback object if LLM completely hallucinates invalid JSON
+            // Fallback object if LLM completely hallucinates invalid JSON or hits Rate Limit
             if (!aiData) {
-                aiData = {
-                    productTitle: detectedObjects.length ? `Premium ${detectedObjects[0]}` : "Manual Review Needed",
-                    brand: "Generic",
-                    description: detectedObjects.length ? `High-quality ${detectedObjects[0]} suitable for all your needs.` : "Unable to extract.",
-                    category: "General",
-                    price: 99,
-                    mrp: 149,
-                    confidenceScore: 0.2
-                };
+                console.log("🛠️ Using Smart Heuristic Fallback with OCR data...");
+                aiData = heuristicExtract(cleanedOcr, detectedObjects);
             }
 
             // 6. Save to Database

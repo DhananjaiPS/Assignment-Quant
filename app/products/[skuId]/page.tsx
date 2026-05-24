@@ -735,8 +735,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ skuId:
                   <p className="text-sm text-slate-500 font-medium">Insufficient historical data to plot trends.</p>
                 </div>
               ) : (
-                <div className="h-56 w-full text-xs font-medium">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-64 w-full text-xs font-medium" style={{ minHeight: 256 }}>
+                  <ResponsiveContainer width="100%" height="100%" minHeight={256} minWidth={0}>
                     <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8' }} dy={10} />
