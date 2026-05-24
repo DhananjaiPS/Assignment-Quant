@@ -2,6 +2,8 @@
 
 An end-to-end, production-grade Product Intelligence Dashboard built for e-commerce sellers on Flipkart. It automates catalog ingestion via video frames or CSV feeds, audits listing quality against platform indexing standards (yielding a 0-100 Quality Score), provides AI-enhanced SEO suggestions, visualizes competitor pricing across nodes (Amazon, Myntra, Ajio), and emits real-time webhook alerts for critical metric deviations.
 
+![Quantacus Landing Page](/public/landing_main.png)
+
 ---
 
 ## 1. System Architecture
@@ -47,25 +49,7 @@ graph TD
 | **Message Queue** | **BullMQ / Redis 7** | Reliable background job processing and inter-process communication. |
 | **Authentication** | **Clerk** | Secure JWT-based session management and user identities. |
 
----
 
-## 3. Screenshots & Demo
-
-*(High-quality visualizations demonstrating the core product flows.)*
-
-**1. Executive Analytics Dashboard**
-![Executive Dashboard](https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800)
-*Overview of catalog health, real-time pricing alerts, and average Quality Scores.*
-
-**2. Draft Review & Validation Pipeline**
-![Draft Review Pipeline](https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800)
-*Reviewing Gemini AI extraction drafts before publishing to the live PostgreSQL database.*
-
-**3. Competitor Pricing Intelligence**
-![Competitor Pricing](https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800)
-*Dynamic tracking of price fluctuations across Amazon, Myntra, and Ajio to ensure competitive margins.*
-
----
 
 ## 4. How to Run Locally
 
@@ -216,3 +200,49 @@ Optimized relational schema (refer to `prisma/schema.prisma`):
 3. **Advanced AI Vector Matching**: Implement Pinecone/Weaviate vector search to accurately map our products to competitor listings rather than relying on basic string matching.
 4. **WebSocket/SSE Integration**: Transition from SWR polling to Server-Sent Events (SSE) for zero-latency job telemetry updates while minimizing database queries.
 5. **Comprehensive Test Suite**: Add Jest for unit testing complex validation math, and Playwright for E2E testing the asynchronous upload-to-publish user flow.
+
+
+## 14. Screenshots Gallery
+
+Here are the visual walkthroughs of the fully operational dashboard and intelligence features:
+
+### Ingestion & Analytics Landing Page
+![Landing Main](/public/landing_main.png)
+
+### Ingestion Hub (Video Ingestion Console)
+![Ingestion Console](/public/screenshot_1.png)
+
+### Real-Time Operations Job Monitor (BullMQ logs)
+![Operations Monitor](/public/screenshot_2.png)
+
+### Seller Intelligence Dashboard Metrics
+![Dashboard Stats](/public/screenshot_3.png)
+
+### Catalog Quality Audit Report (Weak spots)
+![Quality Warnings](/public/screenshot_4.png)
+
+### Competitor Pricing Gap Analyzer
+![Price Gaps](/public/screenshot_5.png)
+
+### In-App Alerts Notification Inbox
+![Alerts Inbox](/public/screenshot_6.png)
+
+### Product Intelligence Specs Sheet (Uncompetitive pricing warning)
+![Specs Sheet](/public/screenshot_7.png)
+
+### AI Title Enhancer Proposed SEO Titles
+![Title Enhancement](/public/screenshot_8.png)
+
+### Swagger Interactive API Console
+![API Documentation](/public/screenshot_9.png)
+
+### Webhook Alerts Configuration Panel
+![Webhooks](/public/screenshot_10.png)
+
+### Edit Product Specifications Page
+![Edit Specs](/public/screenshot_11.png)
+
+### Ingestion Operations Telemetry Logs Console
+![Operations Log](/public/screenshot_12.png)
+
+
