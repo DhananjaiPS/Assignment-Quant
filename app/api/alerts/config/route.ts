@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { getRecipientEmail } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const recipientEmail = getRecipientEmail();
