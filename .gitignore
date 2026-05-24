@@ -23,7 +23,10 @@
 # misc
 .DS_Store
 *.pem
-
+gcp-key.json
+*.json
+.env
+.env.local
 # debug
 npm-debug.log*
 yarn-debug.log*
