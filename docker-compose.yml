@@ -1,0 +1,178 @@
+# services:
+#   redis:
+#     image: redis:7-alpine
+#     container_name: quantaculas-redis
+#     restart: unless-stopped
+#     ports:
+#       - "6379:6379"
+#     command: ["redis-server", "--appendonly", "yes"]
+#     volumes:
+#       - redis_data:/data
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 5
+
+#   db:
+#     image: postgres:15
+#     container_name: quantaculas-postgres
+#     restart: unless-stopped
+#     ports:
+#       - "5432:5432"
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#       POSTGRES_DB: quantaculas_db
+#     volumes:
+#       - pg_data:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U postgres"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 5
+
+#   app:
+#     build: .
+#     container_name: quantaculas-app
+#     command: sh -c "npx prisma db push && npm run start"
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#       db:
+#         condition: service_healthy
+#     environment:
+#       NODE_ENV: production
+#       REDIS_HOST: redis
+#       REDIS_PORT: 6379
+#       DATABASE_URL: postgresql://postgres:postgres@db:5432/quantaculas_db?schema=public
+#       GOOGLE_VISION_API_KEY: ${GOOGLE_VISION_API_KEY}
+#       GEMINI_API_KEY: ${GEMINI_API_KEY}
+#       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+#       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+#       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+#     volumes:
+#      - ./public:/app/public
+
+#   worker:
+#     build: .
+#     container_name: quantaculas-worker
+#     command: npm run workers
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#       db:
+#         condition: service_healthy
+#     environment:
+#       NODE_ENV: production
+#       REDIS_HOST: redis
+#       REDIS_PORT: 6379
+#       DATABASE_URL: postgresql://postgres:postgres@db:5432/quantaculas_db?schema=public
+#       GOOGLE_APPLICATION_CREDENTIALS: /app/gcp-key.json  # <--- YE LINE SABSE IMPORTANT HAI
+#       GOOGLE_VISION_API_KEY: ${GOOGLE_VISION_API_KEY}      
+#       GEMINI_API_KEY: ${GEMINI_API_KEY}
+#       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+#       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+#       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+#     volumes:
+#       - ./public:/app/public
+#       - ./gcp-key.json:/app/gcp-key.json
+
+# volumes:
+#   redis_data:
+#   pg_data:
+
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: quantaculas-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db:
+    image: postgres:15
+    container_name: quantaculas-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: quantaculas_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    container_name: quantaculas-app
+    # 🔴 CHANGE: 'npm run start' ki jagah 'npm run dev' kiya hot-reloading ke liye
+    command: sh -c "npx prisma generate && npx prisma db push --accept-data-loss && npm run dev"
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development # 🔴 CHANGE: development mode
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/quantaculas_db?schema=public
+      GOOGLE_VISION_API_KEY: ${GOOGLE_VISION_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    volumes:
+      # 🔴 CHANGES: Hot Reloading setup
+      - .:/app                 # Saara local code container se sync hoga
+      - /app/node_modules      # Local (mac) node_modules ko Linux container se mix hone se rokega
+      - /app/.next             # Next.js ki dev build isolate karega
+
+  worker:
+    build: .
+    container_name: quantaculas-worker
+    # 🔴 CHANGE: 'tsx watch' worker file ko auto-restart karega jab aap save karenge
+    command: npx tsx watch lib/workers/videoWorker.ts
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development # 🔴 CHANGE: development mode
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/quantaculas_db?schema=public
+      GOOGLE_APPLICATION_CREDENTIALS: /app/gcp-key.json
+      GOOGLE_VISION_API_KEY: ${GOOGLE_VISION_API_KEY}      
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    volumes:
+      # 🔴 CHANGES: Hot Reloading setup
+      - .:/app                 # Pura code sync hoga (isme public aur gcp-key.json automatically aa jayenge)
+      - /app/node_modules      # Isolate node_modules
+
+volumes:
+  redis_data:
+  pg_data:

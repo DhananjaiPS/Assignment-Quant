@@ -1,0 +1,367 @@
+// ======================================================
+// PRODUCT INTELLIGENCE DASHBOARD
+// FINAL PRODUCTION-GRADE PRISMA SCHEMA
+// Optimized for:
+// - Next.js
+// - Prisma
+// - PostgreSQL
+// - BullMQ + Redis
+// - 72-hour MVP delivery
+// ======================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ======================================================
+// PRODUCTS
+// ======================================================
+
+model Product {
+  id                 String             @id @default(cuid())
+
+  // Business SKU
+  skuId              String             @unique
+
+  // Basic Product Info
+  productTitle       String?
+  description        String?
+
+  brand              String?
+  category           String?
+
+  // Frequently filtered attributes
+  color              String?
+  size               String?
+  material           String?
+  gender             String?
+
+  // Flexible category-specific attributes
+  extraAttributes    Json?              @default("{}")
+
+  // Pricing
+  price              Decimal?           @db.Decimal(10, 2)
+  mrp                Decimal?           @db.Decimal(10, 2)
+  medianPrice        Decimal?           @db.Decimal(10, 2)
+  lastCalculatedAt   DateTime?
+
+  availability       AvailabilityStatus @default(IN_STOCK)
+
+  imageUrl           String?
+  productUrl         String?
+
+  // Extraction Metadata
+  extractionSource   ExtractionSource
+  extractionStatus   ExtractionStatus   @default(PENDING)
+
+  // Product Quality Score
+  qualityScore       Decimal?           @db.Decimal(5, 2)
+  confidenceScore    Float?
+
+  // Async lineage
+  processingJobId    String?
+  processingJob      ProcessingJob?     @relation(fields: [processingJobId], references: [id], onDelete: SetNull)
+
+  // Relations
+  issues             ProductIssue[]
+  competitorPrices   CompetitorPrice[]
+  titleEnhancements  TitleEnhancement[]
+  alerts             Alert[]
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  // Indexes
+  @@index([brand])
+  @@index([category])
+  @@index([availability])
+  @@index([qualityScore])
+}
+
+// ======================================================
+// PRODUCT VALIDATION ISSUES
+// ======================================================
+
+model ProductIssue {
+  id              String       @id @default(cuid())
+
+  productId       String
+  product         Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  issueType       IssueType
+  severity        Severity
+
+  title           String
+  description     String
+  suggestedFix    String
+
+  isResolved      Boolean      @default(false)
+  resolvedAt      DateTime?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([severity, isResolved])
+  @@index([issueType])
+}
+
+// ======================================================
+// COMPETITOR PRICING
+// ======================================================
+
+model CompetitorPrice {
+  id                 String                   @id @default(cuid())
+
+  productId          String
+  product            Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  platform           Platform
+
+  competitorTitle    String?
+  competitorUrl      String?
+
+  competitorPrice    Decimal                  @db.Decimal(10, 2)
+
+  currency           String                   @default("INR")
+
+  lastCheckedAt      DateTime
+
+  priceHistory       CompetitorPriceHistory[]
+
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  // Prevent duplicate platform-product entries
+  @@unique([productId, platform, competitorUrl])
+
+  @@index([platform])
+}
+
+// ======================================================
+// PRICE HISTORY
+// ======================================================
+
+model CompetitorPriceHistory {
+  id                   String            @id @default(cuid())
+
+  competitorPriceId    String
+  competitorPrice      CompetitorPrice   @relation(fields: [competitorPriceId], references: [id], onDelete: Cascade)
+
+  oldPrice             Decimal           @db.Decimal(10, 2)
+  newPrice             Decimal           @db.Decimal(10, 2)
+
+  changedAt            DateTime          @default(now())
+
+  @@index([competitorPriceId, changedAt(sort: Desc)])
+}
+
+// ======================================================
+// TITLE ENHANCEMENT ENGINE
+// ======================================================
+
+model TitleEnhancement {
+  id                   String      @id @default(cuid())
+
+  productId            String
+  product              Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  originalTitle        String
+  enhancedTitle        String
+
+  extractedAttributes  Json
+
+  keywords             String[]
+
+  reason               String?
+
+  isApplied            Boolean     @default(false)
+
+  createdAt            DateTime    @default(now())
+}
+
+// ======================================================
+// ALERT SYSTEM
+// ======================================================
+
+model Alert {
+  id               String        @id @default(cuid())
+
+  productId        String?
+  product          Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  alertType        AlertType
+
+  severity         Severity
+
+  title            String
+  message          String
+
+  contextData      Json?         @default("{}")
+
+  isRead           Boolean       @default(false)
+
+  isDismissed      Boolean       @default(false)
+
+  // Prevent alert spam
+  isActive         Boolean       @default(true)
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([severity, isRead, isDismissed])
+  @@index([productId, alertType, isActive])
+}
+
+// ======================================================
+// BACKGROUND JOBS
+// ======================================================
+
+model ProcessingJob {
+  id              String         @id @default(cuid())
+  uniqueKey       String?        @unique
+
+  jobType         JobType
+
+  status          JobStatus      @default(PENDING)
+
+  // 0-100
+  progress        Int            @default(0)
+
+  retryCount      Int            @default(0)
+
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  errorMessage    String?
+
+  metadata        Json?          @default("{}")
+
+  logs            JobLog[]
+
+  uploads         Upload[]
+
+  products        Product[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([status])
+}
+
+// ======================================================
+// JOB LOGS
+// ======================================================
+
+model JobLog {
+  id              String          @id @default(cuid())
+
+  jobId           String
+  job             ProcessingJob   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  message         String
+
+  createdAt       DateTime        @default(now())
+}
+
+// ======================================================
+// FILE UPLOADS
+// ======================================================
+
+model Upload {
+  id                String           @id @default(cuid())
+
+  fileName          String
+
+  fileType          UploadType
+
+  // Vercel Blob / S3 / Cloudinary URL
+  fileUrl           String
+
+  processingJobId   String?
+  processingJob     ProcessingJob?   @relation(fields: [processingJobId], references: [id], onDelete: SetNull)
+
+  uploadedAt        DateTime         @default(now())
+}
+
+// ======================================================
+// ENUMS
+// ======================================================
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  PARTIALLY_COMPLETED
+}
+
+enum JobType {
+  VIDEO_EXTRACTION
+  CSV_IMPORT
+  COMPETITOR_PRICE_REFRESH
+}
+
+enum Platform {
+  AMAZON
+  MYNTRA
+  AJIO
+  NYKAA
+  TATA_CLIQ
+  MEESHO
+}
+
+enum IssueType {
+  MISSING_TITLE
+  VERY_SHORT_TITLE
+  INVALID_PRICE
+  MRP_LOWER_THAN_PRICE
+  MISSING_IMAGE
+  BROKEN_IMAGE_URL
+  WEAK_DESCRIPTION
+  DUPLICATE_SKU
+  MISSING_ATTRIBUTES
+  OUT_OF_STOCK
+}
+
+enum UploadType {
+  VIDEO
+  PRODUCT_CSV
+  COMPETITOR_CSV
+}
+
+enum ExtractionSource {
+  VIDEO_AI
+  CSV_FALLBACK
+  MANUAL_ENTRY
+}
+
+enum ExtractionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AvailabilityStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  PRE_ORDER
+}
+
+enum AlertType {
+  PRICE_GAP_EXCEEDED
+  CRITICAL_METRIC_FAIL
+  COMPETITOR_PRICE_DROP
+  LISTING_VALIDATION_ERROR
+}

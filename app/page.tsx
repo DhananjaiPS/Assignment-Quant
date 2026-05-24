@@ -1,65 +1,148 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import {
+  X,
+  FileVideo,
+  Sparkles,
+  TrendingUp,
+  BellRing,
+  Webhook,
+  Activity,
+  ShieldCheck,
+} from 'lucide-react';
+
+export default function LandingPage() {
+  const router = useRouter();
+  const [showSteps, setShowSteps] = useState(false);
+
+  const features = [
+    {
+      title: 'Video-to-Draft AI Extractor',
+      desc: 'Upload product showcase videos to automatically extract attributes, brands, sizes, colors, and materials using Google Cloud Vision frame-level intelligence.',
+      icon: FileVideo,
+      color: 'text-blue-600 bg-blue-50 border-blue-100',
+    },
+    {
+      title: 'Outlier-Free Pricing Engine',
+      desc: 'Automatically checks competitor prices across Amazon, Myntra, Ajio, Meesho, and Tata Cliq, filtering out outlier prices (<10% of MRP) to calculate stable median price gaps.',
+      icon: TrendingUp,
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    },
+    {
+      title: 'Gemini SEO Title Optimizer',
+      desc: 'Use Gemini AI Title Intelligence to generate keyword-position-optimized, search-ready titles based on extracted listing attributes.',
+      icon: Sparkles,
+      color: 'text-purple-600 bg-purple-50 border-purple-100',
+    },
+    {
+      title: 'Active Alert Inbox',
+      desc: 'Get notified immediately of severe catalog warnings, validation errors, and critical competitor price drop variances.',
+      icon: BellRing,
+      color: 'text-rose-600 bg-rose-50 border-rose-100',
+    },
+    {
+      title: 'Webhook Subscriptions',
+      desc: 'Integrate external client nodes by subscribing to live event triggers for catalog changes and pricing syncs.',
+      icon: Webhook,
+      color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+    },
+    {
+      title: 'Real-Time Jobs Queue',
+      desc: 'Track asynchronous workers, frame extraction, and imports with live logs.',
+      icon: Activity,
+      color: 'text-amber-600 bg-amber-50 border-amber-100',
+    },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="space-y-12 pb-16 animate-fade-in-up">
+
+      {/* HERO */}
+      <div className="relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-md bg-white">
+        <img
+          src="/hero10.png"
+          alt="Landing Hero"
+          className="w-full h-auto block pointer-events-none"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+
+        <div className="absolute left-[4.36%] top-[78%] w-[42%] flex gap-2 z-30">
+          <Link
+            href="/dashboard"
+            className="flex-1 flex items-center justify-center bg-blue-600 text-white font-extrabold rounded-xl text-xs sm:text-sm py-2 shadow-md"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+      </div>
+
+      {/* FEATURES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {features.map((feat, i) => {
+          const Icon = feat.icon;
+          return (
+            <div
+              key={i}
+              className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              <div
+                className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-4 ${feat.color}`}
+              >
+                <Icon className="w-6 h-6" />
+              </div>
+
+              <h3 className="font-bold text-slate-800">{feat.title}</h3>
+              <p className="text-xs text-slate-500 mt-2">{feat.desc}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* TRUST SECTION (UPDATED WITH IMAGES) */}
+      <div className="bg-slate-50 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+
+        <div className="space-y-1 text-center md:text-left">
+          <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            Platform Security & Accuracy Guard
+          </h3>
+          <p className="text-xs text-slate-500">
+            Integrated with major e-commerce platforms for reliable market insights.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* BRAND LOGOS ONLY (NO BOX, BIGGER CLEAN LOOK) */}
+        <div className="flex gap-10 flex-wrap justify-center items-center">
+
+          <img
+            src="/amzon.png"
+            alt="Amazon"
+            className="w-24 h-18 object-contain hover:scale-110 transition-transform"
+          />
+
+          <img
+            src="/myntra.png"
+            alt="Myntra"
+            className="w-14 h-14 object-contain hover:scale-110 transition-transform"
+          />
+
+          <img
+            src="/ajio.png"
+            alt="Ajio"
+            className="w-24 h-18 object-contain hover:scale-110 transition-transform"
+          />
+
+          <img
+            src="/nykaa.png"
+            alt="Nykaa"
+            className="w-24 h-18 object-contain hover:scale-110 transition-transform"
+          />
+
         </div>
-      </main>
+      </div>
+
     </div>
   );
 }
