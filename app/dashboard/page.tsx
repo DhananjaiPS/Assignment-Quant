@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { LayoutDashboard, ShoppingBag, ShieldAlert, BadgeAlert, Sparkles, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import { BellRing } from 'lucide-react';
-
+import { motion } from 'framer-motion';
+import MotionWrapper from '@/components/MotionWrapper';
 export const revalidate = 0; // Disable server-side caching so data is fresh on each load
 
 export default async function DashboardPage() {
@@ -85,29 +86,119 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* Welcome Banner */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-800 p-6 rounded-2xl border border-blue-500/20 shadow-2xl">
-        <div className="relative rounded-3xl overflow-hidden bg-cover bg-center flex items-center px-0 md:px-4">
-          {/* Content */}
-          <div className="relative z-10 max-w-3xl">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white flex items-center gap-2 flex-wrap">
-              <span className="text-white">Seller</span> Intelligence <span className="text-white">Dashboard</span>
-            </h1>
- 
-            <p className="text-blue-100 mt-2 sm:mt-3 font-medium text-xs sm:text-sm md:text-base leading-relaxed">
-              Audit catalog listings, align competitor pricing signals, and optimize search discoverability.
-            </p>
+      {/* Welcome Banner */}
+      <div className="relative flex flex-col lg:flex-row items-center gap-4">
+
+        {/* IMAGE OUTSIDE CARD */}
+        <div className="relative z-20 shrink-0">
+          <img
+            src="/person1.png"
+            alt="Seller Intelligence"
+            className="
+        w-[110px]
+        md:w-[140px]
+        lg:w-[170px]
+        h-auto
+        object-contain
+        drop-shadow-2xl
+        hidden md:block
+        rounded-[22px]
+      "
+          />
+        </div>
+
+        {/* MAIN CARD */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-700 via-blue-600 to-blue-800 border border-blue-500/20 shadow-2xl flex-1 w-full min-h-[170px]">
+
+          {/* GLOW EFFECTS */}
+          <div className="absolute top-0 right-0 w-72 h-72 bg-blue-400/20 blur-3xl rounded-full" />
+          <div className="absolute bottom-0 left-0 w-60 h-60 bg-cyan-300/10 blur-3xl rounded-full" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 px-6 py-7 md:px-8">
+
+            {/* TEXT SECTION */}
+            <div className="max-w-3xl text-center lg:text-left">
+
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 backdrop-blur-md text-blue-100 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI Powered Commerce Intelligence
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl md:text-[52px] font-black tracking-tight text-white leading-tight">
+
+                Seller Intelligence
+                <span className="block text-blue-100">
+                  Dashboard
+                </span>
+
+              </h1>
+
+              <p className="text-blue-100/90 mt-4 font-medium text-sm md:text-base leading-relaxed max-w-2xl">
+                Audit catalog listings, monitor competitor pricing,
+                track marketplace anomalies, and optimize discoverability
+                with real-time AI-driven intelligence.
+              </p>
+
+              {/* STATS */}
+              <div className="flex flex-wrap justify-center lg:justify-start gap-3 mt-6">
+
+                <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
+                  <p className="text-white text-lg font-black">
+                    98.2%
+                  </p>
+                  <p className="text-blue-100 text-[11px] font-semibold whitespace-nowrap">
+                    Listing Accuracy
+                  </p>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
+                  <p className="text-white text-lg font-black">
+                    24/7
+                  </p>
+                  <p className="text-blue-100 text-[11px] font-semibold whitespace-nowrap">
+                    AI Monitoring
+                  </p>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
+                  <p className="text-white text-lg font-black">
+                    Live
+                  </p>
+                  <p className="text-blue-100 text-[11px] font-semibold whitespace-nowrap">
+                    Price Tracking
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex flex-col gap-3 w-full sm:w-auto min-w-[240px]">
+
+              <MotionWrapper>
+                <Link
+                  href="/upload"
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-sm bg-white text-blue-700 shadow-xl hover:bg-slate-100 transition-all whitespace-nowrap"
+                >
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>Ingest New Product</span>
+                </Link>
+              </MotionWrapper>
+
+              <MotionWrapper>
+                <Link
+                  href="/alerts"
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-sm bg-white/10 text-white border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all whitespace-nowrap"
+                >
+                  View Alerts
+                </Link>
+              </MotionWrapper>
+
+            </div>
           </div>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
-          <Link
-            href="/upload"
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-white text-blue-600 shadow-md hover:bg-slate-50 hover:shadow-lg transition-all active:scale-98"
-          >
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            Ingest New Product
-          </Link>
-        </div>
       </div>
+
 
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

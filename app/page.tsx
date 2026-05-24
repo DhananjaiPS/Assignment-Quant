@@ -78,7 +78,36 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* FEATURES */}
+      {/* FEATURES HEADING */}
+      <div className="flex flex-col items-center justify-center mt-14 mb-10 relative">
+
+        {/* TOP BADGE */}
+        <div className="px-4 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold tracking-[0.2em] uppercase shadow-sm mb-4">
+          Product Intelligence Platform
+        </div>
+
+        {/* MAIN HEADING */}
+        <h2 className="relative text-4xl md:text-5xl font-black tracking-tight text-center leading-tight">
+
+          <span className="bg-gradient-to-r from-blue-700 via-cyan-500 to-indigo-700 bg-clip-text text-transparent drop-shadow-sm">
+            Core Features
+          </span>
+
+          {/* GLOW EFFECT */}
+          <div className="absolute inset-0 blur-3xl opacity-20 bg-blue-400 -z-10" />
+        </h2>
+
+        {/* SUBTEXT */}
+        <p className="mt-4 text-slate-500 text-sm md:text-base font-medium text-center max-w-2xl leading-relaxed">
+          AI-powered product extraction, listing quality analysis,
+          competitor pricing intelligence, and actionable seller insights
+          in one unified dashboard.
+        </p>
+
+        {/* DECORATIVE LINE */}
+        <div className="mt-5 w-32 h-1 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-indigo-500 shadow-md" />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {features.map((feat, i) => {
           const Icon = feat.icon;

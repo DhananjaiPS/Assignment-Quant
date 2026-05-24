@@ -26,7 +26,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export default function AlertsHubPage() {
   const { data, mutate, isLoading } = useSWR('/api/alerts', fetcher, { refreshInterval: 4000 });
   const { data: configData, mutate: mutateConfig } = useSWR('/api/alerts/config', fetcher);
-  
+
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
@@ -81,7 +81,7 @@ export default function AlertsHubPage() {
       const res = await fetch('/api/alerts/test-email', { method: 'POST' });
       const resData = await res.json();
       if (!resData.success) throw new Error(resData.error);
-      
+
       // Delay slightly to allow filesystem sync
       setTimeout(async () => {
         const updatedConfig = await mutateConfig();
@@ -129,7 +129,7 @@ export default function AlertsHubPage() {
 
       const resData = await res.json();
       if (!resData.success) throw new Error(resData.error);
-      
+
       // Update local SWR state
       mutate();
     } catch (err: any) {
@@ -154,7 +154,7 @@ export default function AlertsHubPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
-      
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
@@ -165,18 +165,17 @@ export default function AlertsHubPage() {
             Resolve critical listing audit failures, SKU warnings, and marketplace pricing shifts.
           </p>
         </div>
-        
+
         {/* Severity Filters */}
         <div className="flex bg-slate-50 border border-slate-200 rounded-xl p-1 text-xs shadow-inner">
           {['ALL', 'HIGH', 'MEDIUM', 'LOW'].map((sev) => (
             <button
               key={sev}
               onClick={() => setSeverityFilter(sev)}
-              className={`px-3 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer ${
-                severityFilter === sev
+              className={`px-3 py-1.5 rounded-lg font-extrabold transition-all cursor-pointer ${severityFilter === sev
                   ? 'bg-white text-blue-600 border border-slate-200 shadow-sm'
                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/50'
-              }`}
+                }`}
             >
               {sev}
             </button>
@@ -198,11 +197,10 @@ export default function AlertsHubPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
-              hasSmtp 
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${hasSmtp
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                 : 'bg-amber-50 text-amber-700 border border-amber-150'
-            }`}>
+              }`}>
               <span className={`w-2 h-2 rounded-full ${hasSmtp ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
               <span>{hasSmtp ? 'SMTP Connected' : 'Ethereal Sandbox Enabled'}</span>
             </div>
@@ -216,7 +214,7 @@ export default function AlertsHubPage() {
               <Settings className="w-4 h-4 text-slate-500" />
               <span className="font-extrabold">Mail Server Telemetry</span>
             </div>
-            
+
             <div className="space-y-2.5">
               <div className="flex justify-between">
                 <span>Outbound Server:</span>
@@ -247,7 +245,7 @@ export default function AlertsHubPage() {
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">
                 Seller Notification Email
               </label>
-              
+
               <div className="relative rounded-xl shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Mail className="h-4 w-4 text-slate-400" />
@@ -284,11 +282,10 @@ export default function AlertsHubPage() {
 
         {/* Test Result Previews & Live Sandboxes */}
         {testResult && (
-          <div className={`p-4 rounded-2xl border transition-all ${
-            testResult.success 
-              ? 'bg-emerald-50/50 border-emerald-200 text-emerald-800' 
+          <div className={`p-4 rounded-2xl border transition-all ${testResult.success
+              ? 'bg-emerald-50/50 border-emerald-200 text-emerald-800'
               : 'bg-rose-50/50 border-rose-200 text-rose-800'
-          }`}>
+            }`}>
             <div className="flex items-start gap-3">
               {testResult.success ? (
                 <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
@@ -297,7 +294,7 @@ export default function AlertsHubPage() {
               )}
               <div className="space-y-1.5 flex-1">
                 <p className="text-xs font-bold leading-normal">{testResult.message}</p>
-                
+
                 {testResult.previewUrl && (
                   <div className="pt-1.5">
                     <a
@@ -344,37 +341,33 @@ export default function AlertsHubPage() {
             return (
               <div
                 key={alert.id}
-                className={`glass-panel p-6 rounded-2xl bg-white border-slate-200/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-all shadow-sm hover:border-blue-200/70 hover:shadow ${
-                  alert.isRead ? 'opacity-60 bg-slate-50/50' : 'relative overflow-hidden'
-                }`}
+                className={`glass-panel p-6 rounded-2xl bg-white border-slate-200/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-all shadow-sm hover:border-blue-200/70 hover:shadow ${alert.isRead ? 'opacity-60 bg-slate-50/50' : 'relative overflow-hidden'
+                  }`}
               >
                 {/* Visual Glow indicators for unread alerts */}
                 {!alert.isRead && (
-                  <div className={`absolute top-0 bottom-0 left-0 w-1.5 ${
-                    alert.severity === 'HIGH' ? 'bg-red-500' : alert.severity === 'MEDIUM' ? 'bg-amber-500' : 'bg-blue-500'
-                  }`} />
+                  <div className={`absolute top-0 bottom-0 left-0 w-1.5 ${alert.severity === 'HIGH' ? 'bg-red-500' : alert.severity === 'MEDIUM' ? 'bg-amber-500' : 'bg-blue-500'
+                    }`} />
                 )}
 
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-xl border ${
-                    alert.severity === 'HIGH'
+                  <div className={`p-3 rounded-xl border ${alert.severity === 'HIGH'
                       ? 'bg-red-500/10 border-red-500/20 text-red-400'
                       : alert.severity === 'MEDIUM'
-                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                      : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                  }`}>
+                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                        : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                    }`}>
                     {getAlertIcon(alert.alertType)}
                   </div>
 
                   <div className="space-y-1 max-w-xl">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded ${
-                        alert.severity === 'HIGH'
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded ${alert.severity === 'HIGH'
                           ? 'bg-red-500/20 text-red-400'
                           : alert.severity === 'MEDIUM'
-                          ? 'bg-amber-500/20 text-amber-400'
-                          : 'bg-blue-500/20 text-blue-400'
-                      }`}>
+                            ? 'bg-amber-500/20 text-amber-400'
+                            : 'bg-blue-500/20 text-blue-400'
+                        }`}>
                         {alert.severity} Priority
                       </span>
                       <span className="text-[10px] text-slate-500 flex items-center gap-1">
@@ -383,7 +376,7 @@ export default function AlertsHubPage() {
                     </div>
                     <h3 className="font-extrabold text-slate-800 text-sm md:text-base mt-1">{alert.title}</h3>
                     <p className="text-xs text-slate-600 font-semibold leading-relaxed mt-0.5">{alert.message}</p>
-                    
+
                     {alert.productId && alert.product && (
                       <Link
                         href={`/products/${alert.product.skuId}`}
@@ -407,7 +400,7 @@ export default function AlertsHubPage() {
                       Read
                     </button>
                   )}
-                  
+
                   <button
                     onClick={() => handleAlertAction(alert.id, 'dismiss')}
                     disabled={actionLoadingId === alert.id}
