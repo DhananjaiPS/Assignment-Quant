@@ -35,7 +35,15 @@ const MODELS = [
     "gemini-2.0-flash",
 ];
 
-const visionClient = new vision.ImageAnnotatorClient();
+const visionClientOptions: any = {};
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  try {
+    visionClientOptions.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+  } catch (err: any) {
+    console.error("❌ Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:", err.message);
+  }
+}
+const visionClient = new vision.ImageAnnotatorClient(visionClientOptions);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // ======================================================
