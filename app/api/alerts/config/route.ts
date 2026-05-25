@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { getRecipientEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ export async function GET() {
     // Read last email preview if exists
     let lastPreview = null;
     try {
-      const previewPath = path.join(process.cwd(), 'lib', 'email_last_preview.json');
+      const previewPath = path.join(os.tmpdir(), 'email_last_preview.json');
       if (fs.existsSync(previewPath)) {
         lastPreview = JSON.parse(fs.readFileSync(previewPath, 'utf8'));
       }
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const configPath = path.join(process.cwd(), 'lib', 'email_recipient.json');
+    const configPath = path.join(os.tmpdir(), 'email_recipient.json');
     fs.writeFileSync(
       configPath,
       JSON.stringify({ recipientEmail, updatedAt: new Date().toISOString() }, null, 2)

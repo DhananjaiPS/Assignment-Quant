@@ -7,6 +7,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -485,8 +486,7 @@ Alert ID:
 export function getRecipientEmail(): string {
   try {
     const configPath = path.join(
-      process.cwd(),
-      'lib',
+      os.tmpdir(),
       'email_recipient.json'
     );
 
@@ -545,8 +545,7 @@ export async function sendAlertEmail(
 
       try {
         const previewPath = path.join(
-          process.cwd(),
-          'lib',
+          os.tmpdir(),
           'email_last_preview.json'
         );
 
