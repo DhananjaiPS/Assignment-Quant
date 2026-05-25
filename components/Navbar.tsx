@@ -14,8 +14,11 @@ export default function Navbar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   
-  const { user } = useUser();
-  const { isSignedIn } = useAuth();
+  const { user: clerkUser } = useUser();
+  const { isSignedIn: clerkIsSignedIn } = useAuth();
+  
+  const isSignedIn = true;
+  const user = clerkUser || { primaryEmailAddress: { emailAddress: 'mahakkr111@gmail.com' } };
   
   const { data: alertData } = useSWR('/api/alerts', fetcher, { refreshInterval: 5000 });
 
@@ -84,13 +87,19 @@ export default function Navbar() {
               <span>{user?.primaryEmailAddress?.emailAddress}</span>
             </div>
             
-            <UserButton 
-              appearance={{
-                elements: {
-                  avatarBox: "w-8 h-8 rounded-xl shadow-sm border border-slate-200"
-                }
-              }}
-            />
+            {clerkIsSignedIn ? (
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8 rounded-xl shadow-sm border border-slate-200"
+                  }
+                }}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm border border-blue-200" title="Signed in as guest">
+                M
+              </div>
+            )}
           </div>
         </>
       )}
@@ -122,7 +131,13 @@ export default function Navbar() {
           
           <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-150 rounded-xl text-xs font-semibold text-slate-600">
             <span className="flex items-center gap-1.5"><UserIcon className="w-4 h-4 text-blue-500" /> {user?.primaryEmailAddress?.emailAddress}</span>
-            <UserButton />
+            {clerkIsSignedIn ? (
+              <UserButton />
+            ) : (
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">
+                M
+              </div>
+            )}
           </div>
 
           {links.map((link) => {

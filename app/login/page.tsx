@@ -1,5 +1,7 @@
 'use client';
+
 import { SignIn } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export default function LoginPage() {
   return (
@@ -42,6 +44,19 @@ export default function LoginPage() {
               },
             }}
           />
+        </div>
+
+        {/* Recruiter Bypass Callout */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/dashboard"
+            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>👉 Recruiter Demo Access (Skip Login)</span>
+          </Link>
+          <p className="mt-2.5 text-xs text-slate-400 font-semibold">
+            Bypass login and explore the dashboard immediately.
+          </p>
         </div>
       </div>
     </div>
