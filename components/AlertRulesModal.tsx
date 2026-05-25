@@ -53,9 +53,15 @@ export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-center p-6 border-b border-slate-100">
+    <div 
+      onClick={onClose} 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-400/25 backdrop-blur-xs p-4"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()} 
+        className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-150 overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
           <h2 className="text-xl font-extrabold text-slate-800">
             {editingRule ? 'Edit Alert Rule' : 'Create Alert Rule'}
           </h2>
@@ -64,7 +70,7 @@ export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Rule Name</label>
             <input
@@ -117,7 +123,7 @@ export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }
           </div>
         </form>
 
-        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 mt-auto">
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 mt-auto">
           <button
             type="button"
             onClick={onClose}
