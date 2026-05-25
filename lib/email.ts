@@ -573,5 +573,6 @@ export async function sendAlertEmail(
       '[Email] ❌ Failed to send alert email:',
       err
     );
+    throw err;
   }
 }
