@@ -151,11 +151,33 @@ Optimized relational schema (refer to `prisma/schema.prisma`):
 
 ---
 
-## 9. Deployment Links
+## 9. Deployed Component Directory & System Roles
 
-*   **Frontend Web App (Vercel)**: [https://assignment-topaz-two.vercel.app](https://assignment-topaz-two.vercel.app)
-*   **Backend API Endpoint (Vercel)**: [https://assignment-topaz-two.vercel.app/api](https://assignment-topaz-two.vercel.app/api)
-*   **Persistent Worker & Redis Daemon (Railway)**: [https://assignment-quant-production.up.railway.app](https://assignment-quant-production.up.railway.app)
+The system's production architecture is split into four core deployed entrypoints, each serving a specific engineering role:
+
+### 1. Frontend Control Panel & Analytics UI
+*   **Production URL**: [https://assignment-topaz-two.vercel.app](https://assignment-topaz-two.vercel.app)
+*   **Core Role**: Serves the merchant dashboard, analytical graphs, ingestion file dropzones, live logs console, alerts dashboard, and SKU metadata editing workspaces.
+*   **Under the Hood**: Uses Next.js App Router (React client components) styled with Tailwind CSS v4. Data is fetched asynchronously via SWR client-side hooks, providing real-time UI refresh triggers when backend datasets mutate.
+*   **Engineering Rationale**: E-commerce sellers require a visual, highly interactive console with micro-interactions (using Framer Motion) to review drafts, resolve audit alerts, and execute reprioritization actions cleanly.
+
+### 2. Backend REST API Core
+*   **Production URL**: [https://assignment-topaz-two.vercel.app/api](https://assignment-topaz-two.vercel.app/api)
+*   **Core Role**: Exposes serverless RESTful handlers that orchestrate all business logic, database queries, and background queue publishers.
+*   **Under the Hood**: Runs as stateless Next.js Serverless Functions. It integrates the Prisma Client to run raw and optimized queries on our Neon PostgreSQL instance, and publishes active task payloads to Upstash Redis.
+*   **Engineering Rationale**: Encapsulating the business logic (like listing quality scores, price gap math, and email notification dispatches) in a REST API guarantees security, reusability, and enables integration with webhook subscribers.
+
+### 3. Interactive API Sandbox (Swagger UI)
+*   **Production URL**: [https://assignment-topaz-two.vercel.app/api-docs](https://assignment-topaz-two.vercel.app/api-docs)
+*   **Core Role**: Provides an interactive developer console to inspect, query, and test every available API route on the platform.
+*   **Under the Hood**: Serves a Swagger-UI react bundle compiled from a static OpenAPI/Swagger schema configuration.
+*   **Engineering Rationale**: Essential for developer visibility and recruiter evaluation; it allows anyone to run live mock requests against the database without needing local test harnesses.
+
+### 4. Background Processor & ML Worker
+*   **Production URL**: [https://assignment-quant-production.up.railway.app](https://assignment-quant-production.up.railway.app)
+*   **Core Role**: The persistent queue runner that consumes CPU-intensive tasks (decoding videos, running YOLO object detection, executing OCR, and AI semantic categorization).
+*   **Under the Hood**: Deployed as a persistent Docker container. It continuously monitors the Upstash Redis BullMQ queue. When a new file is uploaded, it runs shell pipelines (FFmpeg, local Python YOLOv8 inferences, cloud OCR/Gemini calls) and logs detailed step-by-step progress to PostgreSQL.
+*   **Engineering Rationale**: Serverless functions have execution time limits (typically 10s-30s) and lack GPU/CPU execution stability for video processing. Offloading these long-running, heavyweight calculations to a persistent Railway container protects the web app from timeouts and memory crashes.
 
 ---
 
