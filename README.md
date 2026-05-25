@@ -1,145 +1,118 @@
-# Quantacus PRO - Product Intelligence Dashboard
+# Product Intelligence Dashboard (Quantacus PRO)
 
-An end-to-end, enterprise-ready Product Intelligence Dashboard engineered for high-volume marketplace sellers (specifically optimized for Flipkart indexing standards). The platform automates product catalog ingestion from video frame streams or CSV imports, performs multi-point quality audits to generate a composite Quality Score (0-100), offers Gemini-powered SEO title optimizations, aggregates real-time competitor pricing intelligence across Amazon, Myntra, and Ajio, and dispatches automated webhook triggers for critical business anomalies.
+An end-to-end, production-grade Product Intelligence Dashboard built for e-commerce sellers on Flipkart. It automates catalog ingestion via video frames or CSV feeds, audits listing quality against platform indexing standards (yielding a 0-100 Quality Score), provides AI-enhanced SEO suggestions, visualizes competitor pricing across nodes (Amazon, Myntra, Ajio), and emits real-time webhook alerts for critical metric deviations.
+
+![Quantacus Landing Page](/public/landing_main.png)
 
 ---
 
-## 1. System Architecture & Flow
+
+
+## 1. System Architecture
 
 ```mermaid
 graph TD
-    User([Marketplace Seller / Recruiter]) -->|Upload Video / CSV| UI[Next.js App Router]
+    User([Flipkart Seller]) -->|Upload Video / CSV| UI[Next.js App Router]
     
-    UI -->|Async Multipart POST| API[/api/upload/]
-    API -->|Persist Pending State| DB[(PostgreSQL Database)]
-    API -->|Enqueue Processing Job| RedisQueue[BullMQ Redis Queue]
+    UI -->|Async POST| API[/api/upload/]
+    API -->|Create Pending Run| DB[(PostgreSQL)]
+    API -->|Queue Task| RedisQueue[BullMQ Redis Queue]
     
-    RedisQueue --> Worker[Standalone Node.js Worker]
+    RedisQueue --> Worker[Background TSX Worker]
     
-    Worker -->|1. Demuxing| FFmpeg[FFmpeg Frame Extractor]
-    Worker -->|2. Object Detection| YOLO[YOLOv8 Inference Process]
-    Worker -->|3. Cloud OCR| VisionOCR[Google Cloud Vision API]
-    Worker -->|4. Structure & Tagging| Gemini[Gemini AI Attribute Parser]
-    Worker -->|Stream Telemetry & Logs| DB
+    Worker -->|Step 1| FFmpeg[FFmpeg Frame Extraction]
+    Worker -->|Step 2| YOLO[YOLOv8 Object Detection]
+    Worker -->|Step 3| VisionOCR[Google Vision OCR]
+    Worker -->|Step 4| Gemini[Gemini AI Attribute Parse]
+    Worker -->|Log Telemetry| DB
     
-    UI -->|SWR Log Polling 1000ms| JobAPI[/api/jobs/]
+    UI -->|SWR Polling 1000ms| JobAPI[/api/jobs/]
     JobAPI <--> DB
     
-    UI -->|Review & Publish Draft| PublishAPI[/api/review/publish/]
+    UI -->|Draft Review & Publish| PublishAPI[/api/review/publish/]
     
-    PublishAPI --> Validator[Catalog Audit Engine]
-    PublishAPI --> Repricer[Competitor Pricing Engine]
-    PublishAPI --> AlertEngine[Alert & Notification Router]
+    PublishAPI --> Validator[Listing Validation Engine]
+    PublishAPI --> Repricer[Competitor Pricing Simulator]
+    PublishAPI --> AlertEngine[Alert & Notification Center]
 ```
 
-### Architectural Decisions
-
-* **Asynchronous De-coupled Processing**: Computations requiring heavy I/O and CPU bindings (video decoding via FFmpeg, local YOLOv8 inference) are completely offloaded from the Next.js API server to a dedicated background runner utilizing a BullMQ + Redis task queue. This prevents blocking the main event loop and guarantees high request throughput.
-* **Database-Driven Event Streaming**: Rather than maintaining fragile stateful WebSockets over transient serverless instances, UI log streaming is handled by client-side SWR components polling a normalized Postgres database log. This delivers a robust, stateless connection model that handles network reconnects gracefully.
-
 ---
 
-## 2. Technology Stack & Justification
+## 2. Tech Stack
 
-| Layer | Component | Selection | Engineering Rationale |
-| :--- | :--- | :--- | :--- |
-| **Core Framework** | Web App Engine | **Next.js 16.2.6 (App Router)** | Provides high-performance Server-Side Rendering (SSR), unified client/server routing, and optimized bundle sizes. |
-| **Runtime Language**| Type Safety | **TypeScript 5.x + Python 3** | Strong types across client, API, and worker processes. Python is leveraged for local machine learning model execution. |
-| **Styling & UI** | Design System | **Tailwind CSS v4 + Framer Motion** | Fast utility styling, smooth GPU-accelerated micro-interactions, responsive grid layouts, and cohesive typography. |
-| **Object Detection**| Computer Vision | **YOLOv8 (`yolov8n.pt`)** | Executes local ML inference via Python child processes to detect products within frames before calling external cloud services. |
-| **State & Polling** | Data Fetching | **SWR** | Implements stale-while-revalidate client caches and handles 1000ms background polling for active pipeline jobs. |
-| **Database & ORM** | Relational Store | **Prisma 5.21.1 / PostgreSQL 15** | Type-safe query generation, migrations, pooling, and structured schema representation. |
-| **Task Queue** | Queue Engine | **BullMQ / Redis 7** | Robust multi-worker job scheduling, message-passing, retries, and persistence. |
-| **Authentication** | Identity Provider | **Clerk** | Secure authentication and identity federation. Supports seamless recruiter token bypasses. |
+| Layer | Technology | Justification |
+| --- | --- | --- |
+| **Frontend Framework** | **Next.js 16.2.6 (App Router)** | Client interfaces, robust SSR, and native edge functions. |
+| **Language** | **TypeScript 5.x + Python 3** | Strong typing for frontend/worker, and Python for running local ML scripts. |
+| **Styling & UI** | **Tailwind CSS v4 + Framer Motion** | Utility-first responsive grids, glassmorphism, and micro-interactions. |
+| **Computer Vision** | **YOLOv8** | Fast, local ML model (`yolov8n.pt`) identifying core objects before cloud OCR. |
+| **State Management** | **SWR** | Real-time cache invalidation and 1000ms background polling for worker telemetry. |
+| **ORM & Database** | **Prisma 5.21.1 / PostgreSQL 15** | Type-safe queries, migration handling, and normalized relational storage. |
+| **Message Queue** | **BullMQ / Redis 7** | Reliable background job processing and inter-process communication. |
+| **Authentication** | **Clerk** | Secure JWT-based session management and user identities. |
 
----
 
-## 3. Data Model & Schema Explanation
 
-Quantacus uses a highly normalized PostgreSQL database. The schema is defined in [schema.prisma](file:///Users/dhananjai/Documents/Web_Dev/Quantaculas/prisma/schema.prisma) and maps key entities:
+## 4. How to Run Locally
 
-* **`Product`**: Holds the master record for each product SKU, including title, price, brand, current quality score, and unstructured JSON attributes.
-* **`ProductIssue`**: Represents a failed audit criterion generated by the Listing Validation Engine. Each issue has a `severity` (HIGH, MEDIUM, LOW), detailed descriptions, and actionable `suggestedFix` recommendations.
-* **`CompetitorPrice` & `CompetitorPriceHistory`**: Stores time-series pricing data for identical products sold on Amazon, Myntra, or Ajio. Used to calculate pricing gaps and draw interactive trend graphs.
-* **`ProcessingJob` & `JobLog`**: Holds operational pipeline state (PENDING, RUNNING, COMPLETED, FAILED) and stores sequential logs streamed by the worker, enabling the UI progress console.
-* **`TitleEnhancement`**: Caches AI-optimized title variations proposed by the Gemini engine for easy review and direct application.
-* **`Alert`**: Models stateful notifications (e.g. price drops or listing validation alerts) which trigger seller alarms.
+We use Docker Compose to provide an ephemeral, reproducible local development environment with hot-reloading for both the Next.js app and the background worker.
 
----
-
-## 4. Deployed Application & Recruiter Guest Access
-
-* **Live Frontend (Vercel)**: [https://quantacus-intelligence.vercel.app](https://quantacus-intelligence.vercel.app) *(Simulated URL)*
-* **Live Worker Backend (Railway)**: Persistent runner hosted on a persistent Docker environment to process queue tasks.
-
-### ⚡ Zero-Friction Recruiter Bypass (Auto-Login)
-To simplify recruitment evaluation, the application contains a **built-in guest bypass** that completely eliminates login friction:
-1. **Auto-Authenticated Experience**: If you visit any dashboard path directly (e.g., `/dashboard`), the platform automatically logs you in as the default admin user: **`mahakkr111@gmail.com`**.
-2. **Interactive Navbar Active**: The header navigation bar and all system links are fully active and accessible right away.
-3. **Mock Initial Profile Avatar**: Renders a premium gradient-based placeholder avatar `M` in the header indicating guest admin status.
-4. **Explicit Sign-in Support**: If you wish to test authenticating with your own specific credentials, you can log in through the `/login` page using the Clerk form. Once authenticated, the app will instantly render your real Clerk profile, name, and profile avatar instead of the default admin.
-5. **One-Click Bypass Button**: A dedicated button is also available on the login screen: *"👉 Recruiter Demo Access (Skip Login)"* to skip authentication manually.
-
----
-
-## 5. How to Run Locally
-
-We use Docker Compose to spin up a local development environment.
-
-### Prerequisites
-* **Docker & Docker Compose** installed.
-* A valid **GCP Service Account JSON** key configured with the Google Vision API enabled. Save this key file as `gcp-key.json` in the project root directory.
-
-### Setup Instructions
-
-1. **Clone the Repository**:
+1. **Clone the repository**:
    ```bash
-   git clone <repository_url>
+   git clone <repo_url>
    cd Quantacus
    ```
 
 2. **Configure Environment Variables**:
-   Create a `.env` file in the root directory. Configure keys for your services:
+   Create a `.env` file in the root directory. You must provide keys for Gemini, Google Vision, Cloudinary, and Clerk.
+   Ensure you have your GCP service account JSON saved as `gcp-key.json` in the project root.
+   
+   **Critical `.env` Example**:
    ```env
-   # Database & Redis (Handled automatically by Docker network)
+   # Database & Redis (Handled automatically by Docker)
    DATABASE_URL="postgresql://postgres:postgres@db:5432/quantacus_db?schema=public"
    REDIS_HOST="redis"
    REDIS_PORT=6379
 
-   # Cloudinary Storage
-   CLOUDINARY_CLOUD_NAME="your_cloudinary_cloud_name"
-   CLOUDINARY_API_KEY="your_cloudinary_api_key"
-   CLOUDINARY_API_SECRET="your_cloudinary_api_secret"
+   # Cloudinary
+   CLOUDINARY_CLOUD_NAME="your_cloud_name"
+   CLOUDINARY_API_KEY="your_api_key"
+   CLOUDINARY_API_SECRET="your_api_secret"
 
-   # AI & OCR Services
-   GOOGLE_VISION_API_KEY="your_gcp_vision_api_key"
-   GEMINI_API_KEY="your_gemini_api_key"
+   # AI & OCR
+   GOOGLE_VISION_API_KEY="your_gcp_vision_key"
+   GEMINI_API_KEY="your_gemini_key"
 
-   # Authentication (Required for Clerk components boot-up)
+   # Authentication
+   # CRITICAL: If NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is missing, the Next.js app will crash on boot.
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
    CLERK_SECRET_KEY="sk_test_..."
-   NEXT_PUBLIC_APP_URL="http://localhost:3000"
    ```
 
-3. **Start the Docker Stack**:
+3. **Launch the Container Stack**:
    ```bash
    docker compose up --build -d
    ```
-   This will boot:
-   * `quantacus-postgres`: PostgreSQL database (exposed on port `5432`).
-   * `quantacus-redis`: Redis message store (exposed on port `6379`).
-   * `quantacus-app`: Next.js Web App (exposed on port `3000`, with volume hot-reloading).
-   * `quantacus-worker`: Standalone TypeScript worker running via `tsx watch` to monitor jobs.
+   This spins up:
+   - `quantacus-postgres`: PostgreSQL DB on port 5432
+   - `quantacus-redis`: Redis instance on port 6379
+   - `quantacus-app`: Next.js frontend running on port 3000
+   - `quantacus-worker`: BullMQ background worker running via `tsx watch`
 
-4. **Initialize Database Tables**:
-   Run Prisma migrations and seed the database with initial products and mock pricing history:
-   ```bash
-   docker compose exec app npx prisma db push
-   docker compose exec app npx prisma db seed
-   ```
+4. **Access the Application**:
+   Navigate to [http://localhost:3000](http://localhost:3000).
 
-5. **Browse the Dashboard**:
-   Open [http://localhost:3000](http://localhost:3000).
+---
+
+## 5. How to Use the Deployed App
+
+1. **Authentication**: Sign in via the secure Clerk authentication portal.
+2. **Dashboard Overview**: Review your aggregated Quality Scores, critical alerts, and overall catalog health.
+3. **Ingestion Flow**: Click "Upload Video" or "Upload CSV". Provide a product video clip.
+4. **Telemetry View**: Watch real-time SWR logs stream in as the background worker runs FFmpeg extraction, YOLOv8 object detection, Google Vision OCR, and Gemini parsing.
+5. **Draft Review**: Once the background job completes, you will be redirected to the Review Page to audit the AI's parsed JSON draft.
+6. **Publish & Audit**: Publish the draft to run the Quality Audit Engine and Competitor Repricing simulators.
+7. **Actionable Insights**: Review the `ProductIssue` recommendations to fix your listings and check the dynamic Recharts pricing graphs to match competitor price drops.
 
 ---
 
@@ -147,69 +120,92 @@ We use Docker Compose to spin up a local development environment.
 
 Core RESTful endpoints exposed via Next.js Route Handlers (`app/api/`):
 
-### Ingestion Pipeline
-* **`POST /api/upload-video`**: Accepts video file binaries (`multipart/form-data`), uploads them to Cloudinary, persists a pending `ProcessingJob`, and dispatches a task to the BullMQ queue. Returns `{ success: true, jobId }`.
-* **`POST /api/upload-csv`**: Imports a Flipkart product feed CSV to execute legacy catalog ingestion.
-* **`GET /api/jobs/[jobId]`**: Polled by SWR to fetch active processing statuses, current completion percentages, and chronological pipeline logs.
-
-### Catalog & Quality Audits
-* **`GET /api/products`**: Retrieves the seller inventory, filtering by category or warning state.
-* **`GET /api/products/[skuId]`**: Retrieves detailed specifications, validation issue logs, and competitor pricing history for a specific SKU.
-* **`POST /api/review/publish`**: Finalizes the AI-parsed metadata draft, runs the audit engine, and saves the listing as a live product.
-
-### Competitor Intelligence & Utilities
-* **`POST /api/competitor-prices/refresh`**: Initiates a scheduled run to fetch updated competitor prices.
-* **`POST /api/products/[skuId]/enhance-title`**: Leverages Gemini AI to generate search-optimized, category-aligned product title recommendations.
-* **`POST /api/alerts/rules`**: Manages dynamic alert thresholds (Create, Read, Update, Delete).
+*   **`POST /api/upload-video`**: Accepts FormData, initiates Cloudinary upload, creates a `ProcessingJob`, and queues the background worker. Returns `{ success: true, jobId }`.
+*   **`POST /api/upload-csv`**: Handles bulk legacy catalog ingestion and kicks off parsing tasks.
+*   **`GET /api/jobs/[id]`**: Polled by SWR. Returns the current `JobStatus`, progress percentage, and an array of `JobLog` objects.
+*   **`POST /api/review/publish`**: Commits draft metadata into the live `Product` table, triggers the validation engine, and generates initial competitor pricing targets.
+*   **`GET /api/products`**: Retrieves paginated listings, filtering by category or alert status.
+*   **`POST /api/competitor-prices/refresh`**: Triggers a simulated scraping run to fetch new competitor pricing data.
+*   **`POST /api/optimize-title`**: Leverages Gemini AI to generate SEO-optimized title variants based on extracted attributes.
 
 ---
 
-## 7. Assumptions Made
+## 7. Short Architecture Explanation
 
-1. **Scale of Ingestion Video**: Uploaded videos are short, high-resolution product close-up clips (typically <30 seconds) focusing on label specifications rather than generic multi-minute footage.
-2. **Cross-Platform Matching**: Competitor listing identification is resolved via matching brand and title strings in combination with category attributes.
-3. **Human-in-the-Loop Safeguard**: AI extraction is probabilistic. Inserting products directly to the database without a staging review step is avoided; the system uses a draft validation pipeline to allow merchants to audit and save data safely.
+The system is decoupled into two primary components: a Next.js (App Router) frontend and a background TypeScript worker. The Next.js app handles user interfaces, authentication, and exposing lightweight REST APIs. When a computationally heavy task like video ingestion is requested, the API creates a database record and delegates the task to a BullMQ Redis queue. 
 
----
-
-## 8. What is Real vs. Mocked
-
-| Layer / Feature | Implementation Status | Technical Mechanism |
-| :--- | :--- | :--- |
-| **Worker Queue** | **Real** | BullMQ and Redis manage active job state transitions and handle concurrency natively. |
-| **Object Detection** | **Real** | Local YOLOv8 (`yolov8n.pt`) executes native Python processes to detect products. |
-| **Text Extraction** | **Real** | Calls the Google Vision OCR API to extract texts from frames. |
-| **Semantic Structuring**| **Real** | Google Gemini parses extracted OCR blocks into typed JSON matching schema attributes. |
-| **Competitor Scraping** | **Simulated (Mocked)**| Due to bot-prevention walls, competitor price fluctuations are simulated using random walk variations based on real platform constraints (Amazon, Ajio, etc.). |
-| **Email Dispatch** | **Real/Sandbox** | Dispatches real HTML warning alerts using SMTP configuration (defaults to an Ethereal sandbox URL log during local testing). |
+The standalone TSX worker then consumes these queued jobs, processing FFmpeg extractions, local YOLOv8 object detection via Python, Google Vision OCR, and Gemini AI structuring entirely asynchronously in the background. Meanwhile, the frontend utilizes SWR to poll the PostgreSQL database directly, streaming log updates to the client in real-time without the overhead of long-lived WebSocket connections.
 
 ---
 
-## 9. Design Trade-offs & Engineering Limitations
+## 8. Data Model / Schema
+
+Optimized relational schema (refer to `prisma/schema.prisma`):
+
+*   **`Product`**: Core entity storing SKU, Title, MRP, Price, Quality Score, and JSON attributes.
+*   **`ProductIssue`**: Audit trail of listing failures (Severity: HIGH, MEDIUM, LOW) mapping to Flipkart's checklist.
+*   **`CompetitorPrice` & `CompetitorPriceHistory`**: Tracks historical pricing across nodes (Amazon, Myntra) for time-series charts.
+*   **`ProcessingJob` & `JobLog`**: Tracks async pipeline states (PENDING, RUNNING, COMPLETED) and sequential telemetry messages.
+*   **`TitleEnhancement`**: Caches AI-suggested SEO optimizations.
+*   **`Alert`**: Stores stateful alarms for pricing gaps (>10%) or severe quality score drops.
+
+---
+
+## 9. Deployment Links
+
+*   **Frontend Web App (Vercel)**: [https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app](https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app)
+*   **Backend API Endpoint (Vercel)**: [https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app/api](https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app/api)
+*   *(Note: The async BullMQ background processing worker runs as a persistent daemon hosted on Railway to handle long-running FFmpeg and YOLOv8 pipeline queue jobs).*
+
+---
+
+## 10. Assumptions Made
+
+1. **Local Developer Setup**: The reviewer has Docker and Docker Compose installed and can provide valid API keys for GCP Vision and Gemini.
+2. **Video Constraints**: Uploaded videos are short clips focusing purely on product labels, avoiding massive file processing bottlenecks.
+3. **Draft Staging Necessity**: AI extraction is inherently probabilistic. We assume direct-to-database catalog creation is dangerous, hence the mandatory Draft Review pipeline.
+4. **Competitor Mapping**: Competitor URLs and exact SKU matching across platforms are assumed to be loosely matched by Title/Brand in the simulation.
+
+---
+
+## 11. What is Real vs Mocked
+
+| Component | Production State | Simulation State |
+| --- | --- | --- |
+| **Worker Infrastructure** | **Real** | BullMQ and Redis are fully operational in the Docker stack. |
+| **Database & ORM** | **Real** | PostgreSQL stores all relational data and telemetry logs natively. |
+| **Polling & State** | **Real** | SWR effectively polls database logs in real-time. |
+| **Competitor Scraping** | **Mocked** | Due to bot-protection on e-commerce sites, repricing is simulated using randomized realistic percentage variances. |
+| **Video Storage** | **Mocked/Local** | File parsing relies on local file paths or mocked Cloudinary responses for MVP velocity. |
+| **Object Detection** | **Real** | Local YOLOv8 (`yolov8n.pt`) executes natively via Python child process. |
+| **OCR & AI Parsing** | **Real APIs** | Google Vision and Gemini APIs are actively called. |
+
+---
+
+## 12. Trade-offs and Limitations
 
 1. **SWR Polling vs. WebSockets**: 
-   *Trade-off*: Implemented 1000ms polling instead of a persistent WebSocket.
-   *Rationale*: Serverless deployments (like Vercel) terminate long-lived connections. Polling provides a stateless, robust connection model that handles network drops and scales smoothly under standard REST models.
-2. **YOLOv8 Python Child Process**:
-   *Trade-off*: Spawned Python child processes inside a Node.js worker.
-   *Rationale*: Eliminates the overhead of maintaining a separate gRPC or HTTP server for object detection, although at large scales, moving this to a dedicated Triton Inference Server is ideal.
-3. **Monorepo Structure**:
-   *Trade-off*: Next.js and the background worker share the same repository.
-   *Rationale*: Simplifies shared database model access (Prisma Client) and speeds up early development, though they should be split into isolated microservices for production scaling.
+   *Trade-off*: We utilize SWR polling at 1000ms instead of WebSockets. 
+   *Rationale*: WebSockets require persistent connections, which break easily in serverless deployments (Next.js API routes). SWR polling provides a highly reliable, stateless alternative that handles network interruptions gracefully.
+2. **Monorepo Worker vs Microservice**:
+   *Trade-off*: The worker runs in the same repository utilizing `tsx`.
+   *Rationale*: Reduces context switching and infrastructure complexity for a 72-hour delivery, though at scale it should be deployed as a distinct, horizontally scalable microservice.
+3. **Synchronous Publish Validation**:
+   *Trade-off*: Validations run synchronously during the `/api/review/publish` route.
+   *Rationale*: Simplifies the UI state logic, but could lead to timeouts if the validation ruleset grows excessively large.
 
 ---
 
-## 10. What I Would Improve With More Time
+## 13. What I Would Improve With More Time
 
-1. **Triton/KServe Model Hosting**: Move the YOLOv8 model out of Node.js child processes into a dedicated Triton Inference Server with GPU acceleration to handle concurrent frame processing.
-2. **Server-Sent Events (SSE)**: Replace SWR polling with Server-Sent Events (SSE) to achieve push-based telemetry updates without client-side query loops, preserving database connections.
-3. **Observability & Distributed Tracing**: Implement OpenTelemetry and sign up for Datadog or Prometheus to track job execution latency, queue backlog metrics, and FFmpeg memory usage.
-4. **Pinecone Vector Search SKU Matching**: Implement vector database matching (like Pinecone) based on product images and titles to map our inventory directly to competitor items instead of using basic text matches.
-5. **Comprehensive E2E Test Coverage**: Set up Playwright to test the async video ingestion to final publish flow under mock and real conditions.
+1. **Distributed Tracing & APM**: Integrate Datadog or OpenTelemetry to monitor worker execution times, memory leaks in FFmpeg, and API latency.
+2. **Horizontal Worker Scaling**: Deploy the BullMQ worker as an independent ECS/Kubernetes service with auto-scaling based on Redis queue depth.
+3. **Advanced AI Vector Matching**: Implement Pinecone/Weaviate vector search to accurately map our products to competitor listings rather than relying on basic string matching.
+4. **WebSocket/SSE Integration**: Transition from SWR polling to Server-Sent Events (SSE) for zero-latency job telemetry updates while minimizing database queries.
+5. **Comprehensive Test Suite**: Add Jest for unit testing complex validation math, and Playwright for E2E testing the asynchronous upload-to-publish user flow.
 
----
 
-## 11. Screenshots Gallery
+## 14. Screenshots Gallery
 
 Here are the visual walkthroughs of the fully operational dashboard and intelligence features:
 
@@ -251,3 +247,5 @@ Here are the visual walkthroughs of the fully operational dashboard and intellig
 
 ### Ingestion Operations Telemetry Logs Console
 ![Operations Log](/public/screenshot_12.png)
+
+
