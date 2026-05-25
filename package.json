@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
+    "postinstall": "node -e \"if (require('fs').existsSync('prisma/schema.prisma')) { require('child_process').execSync('prisma generate', { stdio: 'inherit' }); } else { console.log('Prisma schema not found, skipping client generation during npm install.'); }\"",
     "start": "next start",
     "lint": "eslint",
     "worker": "tsx lib/workers/videoWorker.ts",
