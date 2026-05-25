@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { extractFrames } from "@/lib/video/extractFrames";
 import fs from "fs";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 import vision from "@google-cloud/vision";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { detectObjects } from "@/lib/vision/yolo";
@@ -45,6 +46,14 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
 }
 const visionClient = new vision.ImageAnnotatorClient(visionClientOptions);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 // ======================================================
 // NOTIFICATION SYSTEM (For Frontend Toasters)
@@ -270,6 +279,21 @@ STRICT INFERENCE RULES:
                 aiData = heuristicExtract(cleanedOcr, detectedObjects);
             }
 
+            // Upload the main frame to Cloudinary if available
+            let finalImageUrl = relativeImageUrl;
+            if (process.env.CLOUDINARY_CLOUD_NAME && validFrames.length > 0) {
+                try {
+                    console.log("☁️ Uploading extracted product frame to Cloudinary...");
+                    const uploadRes = await cloudinary.uploader.upload(validFrames[0], {
+                        folder: "quantacus/frames",
+                    });
+                    finalImageUrl = uploadRes.secure_url;
+                    console.log("☁️ Cloudinary upload success:", finalImageUrl);
+                } catch (cloudinaryErr: any) {
+                    console.error("❌ Cloudinary upload failed, falling back to local path:", cloudinaryErr.message);
+                }
+            }
+
             // 6. Save to Database
             await prisma.product.update({
                 where: { id: productId },
@@ -288,7 +312,7 @@ STRICT INFERENCE RULES:
                     availability: AvailabilityStatus.IN_STOCK,
                     confidenceScore: Number(aiData.confidenceScore) || 0.5,
                     qualityScore: Math.round((Number(aiData.confidenceScore) || 0.5) * 100),
-                    imageUrl: relativeImageUrl,
+                    imageUrl: finalImageUrl,
                     extractionSource: ExtractionSource.VIDEO_AI,
                     extractionStatus: ExtractionStatus.COMPLETED,
                     extraAttributes: {
