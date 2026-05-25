@@ -1,5 +1,7 @@
 # Product Intelligence Dashboard (Quantacus PRO)
 
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-Watch%20on%20YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/on9taVwX78k?si=KJ-V9ECdraP2AkTI)
+
 An end-to-end, production-grade Product Intelligence Dashboard built for e-commerce sellers on Flipkart. It automates catalog ingestion via video frames or CSV feeds, audits listing quality against platform indexing standards (yielding a 0-100 Quality Score), provides AI-enhanced SEO suggestions, visualizes competitor pricing across nodes (Amazon, Myntra, Ajio), and emits real-time webhook alerts for critical metric deviations.
 
 ![Quantacus Landing Page](/public/landing_main.png)
