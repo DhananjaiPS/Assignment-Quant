@@ -153,8 +153,8 @@ Optimized relational schema (refer to `prisma/schema.prisma`):
 
 ## 9. Deployment Links
 
-*   **Frontend Web App (Vercel)**: [https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app](https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app)
-*   **Backend API Endpoint (Vercel)**: [https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app/api](https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app/api)
+*   **Frontend Web App (Vercel)**: [https://assignment-2rw51yrca-dhananjaipss-projects.vercel.app](https://assignment-2rw51yrca-dhananjaipss-projects.vercel.app)
+*   **Backend API Endpoint (Vercel)**: [https://assignment-2rw51yrca-dhananjaipss-projects.vercel.app/api](https://assignment-2rw51yrca-dhananjaipss-projects.vercel.app/api)
 *   **Persistent Worker & Redis Daemon (Railway)**: [https://assignment-quant-production.up.railway.app](https://assignment-quant-production.up.railway.app)
 
 ---
