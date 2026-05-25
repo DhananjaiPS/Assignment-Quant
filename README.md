@@ -155,7 +155,7 @@ Optimized relational schema (refer to `prisma/schema.prisma`):
 
 *   **Frontend Web App (Vercel)**: [https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app](https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app)
 *   **Backend API Endpoint (Vercel)**: [https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app/api](https://assignment-bbjqb3clw-dhananjaipss-projects.vercel.app/api)
-*   *(Note: The async BullMQ background processing worker runs as a persistent daemon hosted on Railway to handle long-running FFmpeg and YOLOv8 pipeline queue jobs).*
+*   **Persistent Worker & Redis Daemon (Railway)**: [https://assignment-quant-production.up.railway.app](https://assignment-quant-production.up.railway.app)
 
 ---
 
