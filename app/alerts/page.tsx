@@ -24,6 +24,7 @@ import {
   Trash2
 } from 'lucide-react';
 import AlertRulesModal from '@/components/AlertRulesModal';
+import toast from 'react-hot-toast';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -48,9 +49,10 @@ export default function AlertsHubPage() {
       });
       const resData = await res.json();
       if (!resData.success) throw new Error(resData.error);
+      toast.success('Alert rule deleted successfully!');
       mutateRules();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete alert rule');
+      toast.error(err.message || 'Failed to delete alert rule');
     }
   };
 
@@ -77,7 +79,7 @@ export default function AlertsHubPage() {
   const handleSaveEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputEmail || !inputEmail.includes('@')) {
-      alert('Please enter a valid email address.');
+      toast.error('Please enter a valid email address.');
       return;
     }
     setSavingEmail(true);
@@ -90,9 +92,9 @@ export default function AlertsHubPage() {
       const resData = await res.json();
       if (!resData.success) throw new Error(resData.error);
       await mutateConfig();
-      alert('Success! Notification email connected successfully.');
+      toast.success('Success! Notification email connected successfully.');
     } catch (err: any) {
-      alert(err.message || 'Failed to connect email.');
+      toast.error(err.message || 'Failed to connect email.');
     } finally {
       setSavingEmail(false);
     }
@@ -156,8 +158,9 @@ export default function AlertsHubPage() {
 
       // Update local SWR state
       mutate();
+      toast.success(action === 'read' ? 'Alert marked as read!' : 'Alert dismissed successfully!');
     } catch (err: any) {
-      alert(err.message || 'Failed to update alert state.');
+      toast.error(err.message || 'Failed to update alert state.');
     } finally {
       setActionLoadingId(null);
     }

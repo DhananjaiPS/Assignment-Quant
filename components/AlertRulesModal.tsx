@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Save, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }: any) {
   const [name, setName] = useState('');
@@ -43,10 +44,11 @@ export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
+      toast.success(editingRule ? 'Alert rule updated successfully!' : 'Alert rule created successfully!');
       onSave(data.rule);
       onClose();
     } catch (err: any) {
-      alert(err.message || 'Failed to save alert rule');
+      toast.error(err.message || 'Failed to save alert rule');
     } finally {
       setIsSaving(false);
     }
@@ -62,10 +64,11 @@ export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
+      toast.success('Alert rule deleted successfully!');
       onSave(null);
       onClose();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete alert rule');
+      toast.error(err.message || 'Failed to delete alert rule');
     } finally {
       setIsSaving(false);
     }
