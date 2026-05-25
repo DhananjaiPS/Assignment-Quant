@@ -223,7 +223,7 @@ export default function IngestionPage() {
       const formData = new FormData();
       formData.append('file', csvFile);
 
-      const res = await fetch('/api/upload-csv', {
+      const res = await fetch('/api/upload-products-csv', {
         method: 'POST',
         body: formData,
       });
