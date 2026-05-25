@@ -43,7 +43,9 @@ export async function extractFrames(fileName: string): Promise<{
   const ffmpegCmd = `
 ffmpeg -y \
 -ss 00:00:02 \
+-threads 1 \
 -i "${targetVideo}" \
+-vf "scale=640:-1" \
 -vframes 3 \
 -q:v 2 \
 "${outputPattern}"
