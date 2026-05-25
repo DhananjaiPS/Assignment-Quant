@@ -50,19 +50,25 @@ async function getTransporter(): Promise<any> {
   // ─── Production SMTP ──────────────────────────────────────────────────────
 
   if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+    const isGmail = SMTP_HOST.toLowerCase().includes('gmail');
+    
     _transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: parseInt(SMTP_PORT ?? '587', 10),
-      secure: parseInt(SMTP_PORT ?? '587', 10) === 465,
-
+      ...(isGmail ? { service: 'gmail' } : {
+        host: SMTP_HOST,
+        port: parseInt(SMTP_PORT ?? '587', 10),
+        secure: parseInt(SMTP_PORT ?? '587', 10) === 465,
+      }),
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS,
       },
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
 
     console.log(
-      `[Email] ✅ SMTP Connected → ${SMTP_HOST}:${SMTP_PORT ?? 587}`
+      `[Email] ✅ SMTP Connected → ${isGmail ? 'Gmail Service' : `${SMTP_HOST}:${SMTP_PORT ?? 587}`}`
     );
   }
 
