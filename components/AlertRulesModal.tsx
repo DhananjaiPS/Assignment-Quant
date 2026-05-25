@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, Trash2 } from 'lucide-react';
 
 export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }: any) {
   const [name, setName] = useState('');
@@ -52,25 +52,44 @@ export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }
     }
   };
 
+  const handleDelete = async () => {
+    if (!editingRule?.id) return;
+    if (!confirm('Are you sure you want to delete this alert rule?')) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/alerts/rules?id=${editingRule.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      onSave(null);
+      onClose();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete alert rule');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div 
       onClick={onClose} 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-400/25 backdrop-blur-xs p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-500/5 backdrop-blur-sm p-4"
     >
       <div 
         onClick={(e) => e.stopPropagation()} 
-        className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-150 overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white rounded-2xl w-full max-w-md shadow-xl border border-slate-150 overflow-hidden"
       >
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
           <h2 className="text-xl font-extrabold text-slate-800">
             {editingRule ? 'Edit Alert Rule' : 'Create Alert Rule'}
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Rule Name</label>
             <input
@@ -123,22 +142,37 @@ export default function AlertRulesModal({ isOpen, onClose, onSave, editingRule }
           </div>
         </form>
 
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 mt-auto">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2 text-sm font-bold text-slate-600 hover:text-slate-800 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl flex items-center gap-2 shadow-sm transition-all disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? 'Saving...' : 'Save Rule'}
-          </button>
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+          {editingRule ? (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isSaving}
+              className="px-4 py-2 border border-rose-200 hover:bg-rose-50 text-rose-600 text-sm font-bold rounded-xl flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          ) : (
+            <div />
+          )}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2 text-sm font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSaving}
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl flex items-center gap-2 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              {isSaving ? 'Saving...' : 'Save Rule'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

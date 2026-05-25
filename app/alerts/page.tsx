@@ -20,7 +20,8 @@ import {
   CheckCircle,
   XCircle,
   SlidersHorizontal,
-  Edit2
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import AlertRulesModal from '@/components/AlertRulesModal';
 
@@ -38,6 +39,20 @@ export default function AlertsHubPage() {
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const rules = rulesData?.success ? rulesData.rules : [];
+
+  const handleDeleteRule = async (ruleId: string) => {
+    if (!confirm('Are you sure you want to delete this alert rule?')) return;
+    try {
+      const res = await fetch(`/api/alerts/rules?id=${ruleId}`, {
+        method: 'DELETE',
+      });
+      const resData = await res.json();
+      if (!resData.success) throw new Error(resData.error);
+      mutateRules();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete alert rule');
+    }
+  };
 
   // Email Notification States
   const [inputEmail, setInputEmail] = useState('');
@@ -343,10 +358,10 @@ export default function AlertsHubPage() {
               setEditingRule(null);
               setIsRulesModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs tracking-wide uppercase py-2 px-4 rounded-xl transition-all border border-indigo-200 cursor-pointer shadow-sm"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs tracking-wide uppercase py-2 px-4 rounded-xl transition-all cursor-pointer shadow-sm"
           >
             <Settings className="w-4 h-4" />
-            Configure Rules
+            Create Alert Rule
           </button>
         </div>
 
@@ -368,15 +383,25 @@ export default function AlertsHubPage() {
                     {rule.threshold !== null && <span className="ml-2">| Threshold: <span className="text-indigo-600 font-bold">{rule.threshold}</span></span>}
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setEditingRule(rule);
-                    setIsRulesModalOpen(true);
-                  }}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-indigo-600 cursor-pointer"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingRule(rule);
+                      setIsRulesModalOpen(true);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 rounded-lg text-xs font-bold text-slate-600 hover:text-indigo-700 cursor-pointer transition-all"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRule(rule.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-rose-50/50 hover:bg-rose-50 border border-rose-100 hover:border-rose-200 rounded-lg text-xs font-bold text-rose-600 cursor-pointer transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
