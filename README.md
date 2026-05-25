@@ -92,6 +92,7 @@ We use Docker Compose to provide an ephemeral, reproducible local development en
 3. **Launch the Container Stack**:
    ```bash
    docker compose up --build -d
+
    ```
    This spins up:
    - `quantacus-postgres`: PostgreSQL DB on port 5432
@@ -231,43 +232,43 @@ The system's production architecture is split into four core deployed entrypoint
 
 Here are the visual walkthroughs of the fully operational dashboard and intelligence features:
 
-### Ingestion & Analytics Landing Page
+<!-- ### Ingestion & Analytics Landing Page -->
 ![Landing Main](/public/landing_main.png)
 
-### Ingestion Hub (Video Ingestion Console)
+<!-- ### Ingestion Hub (Video Ingestion Console) -->
 ![Ingestion Console](/public/screenshot_1.png)
 
-### Real-Time Operations Job Monitor (BullMQ logs)
+<!-- ### Real-Time Operations Job Monitor (BullMQ logs) -->
 ![Operations Monitor](/public/screenshot_2.png)
 
-### Seller Intelligence Dashboard Metrics
+<!-- ### Seller Intelligence Dashboard Metrics -->
 ![Dashboard Stats](/public/screenshot_3.png)
 
-### Catalog Quality Audit Report (Weak spots)
+<!-- ### Catalog Quality Audit Report (Weak spots) -->
 ![Quality Warnings](/public/screenshot_4.png)
 
-### Competitor Pricing Gap Analyzer
+<!-- ### Competitor Pricing Gap Analyzer -->
 ![Price Gaps](/public/screenshot_5.png)
 
-### In-App Alerts Notification Inbox
+<!-- ### In-App Alerts Notification Inbox -->
 ![Alerts Inbox](/public/screenshot_6.png)
 
-### Product Intelligence Specs Sheet (Uncompetitive pricing warning)
+<!-- ### Product Intelligence Specs Sheet (Uncompetitive pricing warning) -->
 ![Specs Sheet](/public/screenshot_7.png)
 
-### AI Title Enhancer Proposed SEO Titles
+<!-- ### AI Title Enhancer Proposed SEO Titles -->
 ![Title Enhancement](/public/screenshot_8.png)
 
-### Swagger Interactive API Console
+<!-- ### Swagger Interactive API Console -->
 ![API Documentation](/public/screenshot_9.png)
 
-### Webhook Alerts Configuration Panel
+<!-- ### Webhook Alerts Configuration Panel -->
 ![Webhooks](/public/screenshot_10.png)
 
-### Edit Product Specifications Page
+<!-- ### Edit Product Specifications Page -->
 ![Edit Specs](/public/screenshot_11.png)
 
-### Ingestion Operations Telemetry Logs Console
+<!-- ### Ingestion Operations Telemetry Logs Console -->
 ![Operations Log](/public/screenshot_12.png)
 
 
