@@ -1,24 +1,7 @@
-import fs from "fs";
-
-// Initialize Google credentials from environment variable
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    const credentialsPath = "/app/google-credentials.json";
-    try {
-        fs.writeFileSync(
-            credentialsPath,
-            process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-            "utf-8"
-        );
-        process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
-        console.log("✅ Google credentials file created successfully");
-    } catch (err) {
-        console.error("❌ Failed to write Google credentials file:", err);
-    }
-}
-
 import { Worker, Job } from "bullmq";
 import { prisma } from "@/lib/prisma";
 import { extractFrames } from "@/lib/video/extractFrames";
+import fs from "fs";
 import path from "path";
 import vision from "@google-cloud/vision";
 import { GoogleGenerativeAI } from "@google/generative-ai";
