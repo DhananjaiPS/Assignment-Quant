@@ -20,6 +20,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Copy Prisma schema before npm install to support postinstall prisma generate
+COPY prisma ./prisma/
+
 # Install npm packages
 RUN npm install
 
@@ -29,9 +32,6 @@ RUN npm install nodemailer @types/nodemailer
 
 # Copy full project
 COPY . .
-
-# Generate Prisma client
-RUN npx prisma generate
 
 # Build Next.js
 RUN npm run build
