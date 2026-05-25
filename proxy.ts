@@ -26,9 +26,6 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   // Allow all routes to be accessed publicly so recruiters/guests don't get forced to login
-  // if (isProtectedRoute(req) && !isPublicRoute(req)) {
-  //   await auth.protect()
-  // }
 })
 
 export const config = {

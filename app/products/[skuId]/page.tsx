@@ -330,7 +330,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ skuId:
                   r="26"
                   cx="32"
                   cy="32"
-                // className="transition-all duration-1000 ease-out"
                 />
               </svg>
               <span className="absolute text-sm font-bold text-slate-800">{score}%</span>
