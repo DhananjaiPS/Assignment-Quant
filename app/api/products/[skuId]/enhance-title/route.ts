@@ -21,26 +21,61 @@ export async function POST(
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.4,
+      }
+    });
 
     const prompt = `
-      You are an elite E-commerce SEO Expert.
-      Based on the following product data, generate EXACTLY ONE highly optimized, click-driven product title.
-      Rules:
-      - Include Brand, Material, Key Feature, and Category if present.
-      - Max 75 characters.
-      - Do NOT output quotes or extra text, just the title.
+You are an Elite E-Commerce SEO Cataloging Expert.
+Your job is to generate a highly optimized, click-driven, search-engine-friendly product title and select target SEO keywords.
 
-      Category: ${product.category || 'General'}
-      Description: ${product.description || 'N/A'}
-      Brand: ${product.brand || 'N/A'}
-      Color: ${product.color || 'N/A'}
-    `;
+ORIGINAL PRODUCT DATA:
+- Original Title: ${product.productTitle || 'N/A'}
+- Description: ${product.description || 'N/A'}
+- Category: ${product.category || 'General'}
+- Brand: ${product.brand || 'N/A'}
+- Color: ${product.color || 'N/A'}
+- Material: ${product.material || 'N/A'}
+- Gender: ${product.gender || 'N/A'}
+- Size: ${product.size || 'N/A'}
+
+STRICT ENHANCEMENT RULES:
+1. The new title must be clean, readable, professional, and follow the standard format: Brand + Gender (if applicable) + Material/Key Feature + Product Category/Type.
+2. Max 75 characters for the title.
+3. Incorporate high-volume e-commerce search keywords.
+4. Extract 3-5 target search keywords that match user intent.
+5. Provide a short, persuasive 1-sentence reasoning (reason) why this title will perform better (e.g. improve click-through-rate, search indexing).
+
+Return ONLY a valid JSON object matching this structure:
+{
+  "suggestedTitle": "Highly Optimized Title (Max 75 characters)",
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "reason": "Clear 1-sentence SEO rationale for this enhancement."
+}
+`;
 
     const response = await model.generateContent(prompt);
-    const suggestedTitle = response.response.text().trim().replace(/['"]/g, '');
+    const rawText = response.response.text();
+    
+    let aiData = { suggestedTitle: '', keywords: [] as string[], reason: '' };
+    try {
+      const cleaned = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+      aiData = JSON.parse(cleaned);
+    } catch (e) {
+      aiData = {
+        suggestedTitle: rawText.trim().replace(/['"]/g, '').substring(0, 75),
+        keywords: [product.brand, product.category, product.color].filter(Boolean) as string[],
+        reason: 'Enhanced listing title for improved search indexability.'
+      };
+    }
 
-    // Optionally create a TitleEnhancement record
+    const suggestedTitle = aiData.suggestedTitle || product.productTitle || 'Enhanced Product';
+
+    // Create a TitleEnhancement record with parsed parameters
     await prisma.titleEnhancement.create({
       data: {
         productId: product.id,
@@ -49,9 +84,13 @@ export async function POST(
         extractedAttributes: {
           category: product.category,
           brand: product.brand,
-          color: product.color
+          color: product.color,
+          material: product.material,
+          gender: product.gender,
+          size: product.size
         },
-        keywords: []
+        keywords: aiData.keywords || [],
+        reason: aiData.reason || 'Enhanced SEO-friendly e-commerce structure.'
       }
     });
 
