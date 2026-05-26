@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import nodemailer from 'nodemailer';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -37,8 +38,6 @@ let _transporter: any = null;
 
 async function getTransporter(): Promise<any> {
   if (_transporter) return _transporter;
-
-  const nodemailer = eval('require')('nodemailer');
 
   const {
     SMTP_HOST,
@@ -524,8 +523,6 @@ export async function sendAlertEmail(
 ): Promise<void> {
   try {
     const transporter = await getTransporter();
-
-    const nodemailer = eval('require')('nodemailer');
 
     const from =
       process.env.SMTP_FROM ??
